@@ -51,7 +51,38 @@ mean log-likelihood per base:
 | Uniform guessing (ln 0.25) | −1.3863 |
 
 The model finds real mtDNA clearly more probable than shuffles of it, which sit
-near chance. Batched and one-at-a-time scoring agree to 6 decimal places.
+near chance. Repeat runs at the same batch size give bit-identical scores.
+
+(Correction: an earlier version of this file, in commit 8989a84, said batched
+and one-at-a-time scoring agree to 6 decimal places. Both runs in that check
+actually used batch size 1, so it tested nothing about batching. The real
+comparison is below.)
+
+## Batch size changes scores: always score one sequence at a time
+
+From `python scripts/check_batch_size.py`, run 2026-10-04: the ref and alt
+501 bp windows for 8 single-base variants in `tests/fixtures/chrM_1_1000.fa`.
+
+| Comparison | Max absolute score difference |
+|---|---|
+| Batch size 1, run twice | 0.0 |
+| Batch size 1 vs 8 | 0.0033 |
+| Batch size 1 vs 16 | 0.0030 |
+| *For scale: median absolute variant effect (alt − ref), batch size 1* | *0.00087* |
+
+Batching moves scores by more than a typical variant effect. Between batch
+size 1 and 16, 3 of the 8 variant scores changed sign. A likely cause, not
+verified, is that FP8 scaling factors are computed over the whole batch, so a
+sequence's score depends on its batch-mates.
+
+**Decision:** `Evo2Adapter` always uses batch size 1 and does not expose a
+batch-size option. This is slower but exactly reproducible.
+
+**Open question:** even at batch size 1, FP8 rounding adds noise to each score,
+and variant effects are small. How much of a variant score is rounding noise
+has not been measured. One way to check is to compare against the same
+checkpoint run with FP8 off (the Evo 2 README suggests this lowers accuracy for
+the 1B model, so it would be a comparison, not a replacement).
 
 ## Caveat: FP8 on a non-Hopper GPU
 

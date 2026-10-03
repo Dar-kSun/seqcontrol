@@ -21,6 +21,7 @@ conda install -y -c nvidia -c conda-forge cuda-nvcc cuda-cudart-dev transformer-
 pip install ninja packaging wheel
 MAX_JOBS=4 pip install flash-attn==2.8.0.post2 --no-build-isolation
 pip install evo2==0.6.0
+pip install -e "$(dirname "$0")/.."  # this repo, so scripts can import seqcontrol
 
 python -c "import torch, transformer_engine as te, flash_attn, evo2; \
 print('torch', torch.__version__, 'te', te.__version__, 'flash_attn', flash_attn.__version__, \

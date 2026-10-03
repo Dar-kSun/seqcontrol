@@ -44,7 +44,8 @@ def main() -> None:
     args = parser.parse_args()
 
     import torch
-    from evo2 import Evo2
+
+    from seqcontrol.models.evo2 import Evo2Adapter
 
     print(
         f"python {platform.python_version()}  torch {torch.__version__}  cuda {torch.version.cuda}"
@@ -53,7 +54,8 @@ def main() -> None:
     torch.cuda.reset_peak_memory_stats()
 
     t0 = time.perf_counter()
-    model = Evo2(args.model)
+    model = Evo2Adapter(args.model)
+    model.load()
     torch.cuda.synchronize()
     load_s = time.perf_counter() - t0
     load_mem = torch.cuda.max_memory_allocated() / 2**30

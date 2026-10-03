@@ -1,1 +1,1 @@
-"""Models for seqcontrol. Not yet implemented."""
+"""Model adapters. See base.py for the interface."""
