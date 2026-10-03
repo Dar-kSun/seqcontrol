@@ -13,7 +13,7 @@ below is not yet implemented unless marked done.
 | M1: model adapter + smoke test (Evo 2 `evo2_1b_base` on an 8 GB laptop GPU; see `docs/model-choice.md`) | done |
 | M2: data loaders + manifest (94 pathogenic, 228 benign mtDNA SNVs; see `data/MANIFEST.md`) | done |
 | M3: native baseline (AUROC 0.856 [0.805, 0.903] on 322 mtDNA variants, `evo2_1b_base`; see `docs/findings.md`) | done |
-| M4: cyclic-permutation (context-swap) control | not yet implemented |
+| M4: context-swap controls (tRNA swap: AUROC 0.824 to 0.750, CDI 0.23 [−0.12, 0.46], n = 67; see `docs/findings.md`) | done |
 | M5: flank-shuffle sweep | not yet implemented |
 | M6: trust card + CLI | not yet implemented |
 

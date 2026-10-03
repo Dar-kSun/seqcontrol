@@ -3,6 +3,85 @@
 The running results log. Each entry records the date, the model checkpoint, the
 command that produced the number, and the number with its confidence interval.
 
+## 2026-10-04: context-swap controls on tRNA variants (M4)
+
+**Model: Evo 2 `evo2_1b_base` (1B), Evo 2's shipped FP8 recipe. 67 tRNA
+variants (44 pathogenic, 23 benign). Single scoring run per control.**
+
+Two versions of the control, both keeping every tRNA's own bases
+byte-identical (asserted on every perturbed sequence):
+
+- **tRNA swap** (the source paper's design): every tRNA moves into the slot
+  of the tRNA *k* places along the chromosome, carrying its own sequence;
+  all 19 shifts. Overlapping tRNAs (MT-TI+MT-TQ, MT-TC+MT-TY) move as one unit.
+- **Window rotation:** each 1,025 bp scoring window is rotated by 64, 128, …
+  bp, skipping offsets that would cut the tRNA; 13 offsets.
+
+The unperturbed setting reproduces the M3 baseline scores exactly.
+
+Reproduce: `python scripts/02_permutation.py --control trna-swap` (GPU,
+~10 min), or `--from-csv` to recompute every number below from
+`results/permutation_*.csv` in seconds without a GPU.
+
+| | tRNA swap | Window rotation |
+|---|---|---|
+| AUROC native | 0.824 [0.713, 0.915] | 0.824 [0.713, 0.915] |
+| AUROC under control (mean over settings) | 0.750 [0.661, 0.826] | 0.793 [0.692, 0.877] |
+| Range across settings | 0.657 – 0.835 | 0.745 – 0.843 |
+| **AUROC drop** | **0.074 [−0.030, 0.162]** | 0.031 [−0.015, 0.072] |
+| **CDI** | **0.23 [−0.12, 0.46]** | 0.10 [−0.05, 0.23] |
+| Spearman of ΔL, native vs control (mean) | **0.56** (0.40 – 0.71) | 0.90 (0.77 – 0.96) |
+| Sensitivity / specificity at native-Youden cut-off (ΔL ≤ −0.0030) | 0.82 / 0.83 → **0.56 / 0.83** | 0.82 / 0.83 → 0.69 / 0.80 |
+| Sensitivity / specificity at the paper's cut-off (ΔL ≤ −0.0081) | 0.23 / 1.00 → 0.16 / 1.00 | 0.23 / 1.00 → 0.22 / 1.00 |
+| Median ΔL, pathogenic | −0.0056 → −0.0036 | −0.0056 → −0.0048 |
+| Median ΔL, benign | −0.0013 → −0.0007 | −0.0013 → −0.0013 |
+
+95% intervals: 2,000 label-stratified bootstrap resamples of variants, paired
+across native and control.
+
+What this shows:
+
+1. **Moving a tRNA to another tRNA's address changes its variant scores a
+   lot.** Per-variant Spearman falls to 0.56, far below the ~0.95 that
+   changing only the FP8 recipe produces. Context is a large part of each
+   individual score.
+2. **But ranking survives better than the scores do.** AUROC falls from
+   0.824 to 0.750, still well above chance, and the drop (0.074) has an
+   interval that includes zero at this sample size. CDI is 0.23: on the
+   point estimate, about a quarter of the above-chance signal depends on
+   the tRNA's genomic address, but the data are also consistent with none
+   and with nearly half.
+3. **Threshold metrics exaggerate the effect.** Under the swap, effect sizes
+   shrink for both classes (median pathogenic ΔL −0.0056 → −0.0036), so a
+   cut-off fixed on native scores loses 26 points of sensitivity while
+   specificity is unchanged. This is the mechanism suggested in the M2 entry
+   for the paper's 65.8% → 5.1% collapse: a compressed score distribution
+   crossing a fixed threshold, rather than (only) lost discrimination.
+4. **Window rotation is a milder control** (Spearman 0.90, CDI 0.10). It
+   keeps the same bases in the window and only rearranges them, so it tests
+   sensitivity to arrangement and to an artificial junction, not to a
+   genuinely different neighbourhood.
+
+**Relation to the paper.** The direction is reproduced: moving tRNAs lowers
+sensitivity at a fixed threshold. The magnitude is not: 0.82 → 0.56 here
+against 0.658 → 0.051 in the paper, and specificity does not rise as it did
+there. The differences in setup are large (model size unstated in the paper,
+a different benign set, a different threshold and possibly a different
+permutation), so this is not evidence the paper is wrong. It does show that,
+for `evo2_1b_base` on this variant set, the tRNA signal is far from purely
+contextual.
+
+Limitations specific to this result:
+- n = 67, with 23 benign. Intervals are wide; the AUROC drop is not
+  significant.
+- tRNA labels cluster by gene (MT-TL1 has 13 pathogenic, 0 benign). Part of
+  the native AUROC may be the model telling genes apart rather than variants
+  within them; this was not separated out.
+- The swap leaves genes in reference-strand orientation. A minus-strand tRNA
+  placed in a plus-strand neighbourhood is part of the perturbation.
+- Single run per control; FP8-recipe sensitivity was checked for the
+  baseline only.
+
 ## 2026-10-04: native baseline (M3)
 
 **Model: Evo 2 `evo2_1b_base` (1B parameters), Evo 2's shipped FP8 recipe.**
