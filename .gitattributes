@@ -1,0 +1,3 @@
+# Store every text file with LF line endings, whatever the OS.
+* text=auto eol=lf
+*.png binary
