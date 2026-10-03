@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Data and model weights: never committed (see data/MANIFEST.md)
+data/raw/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+checkpoints/
+weights/
+.cache/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
