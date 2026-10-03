@@ -71,3 +71,12 @@ def test_bad_inputs_are_rejected():
         auroc([0, 2], [0.1, 0.2])
     with pytest.raises(ValueError):
         auroc([0, 1], [0.1, np.nan])
+
+
+def test_paired_bootstrap_of_a_difference_is_zero_for_identical_scores():
+    from seqcontrol.metrics import paired_bootstrap
+
+    y = np.r_[np.ones(20), np.zeros(30)].astype(int)
+    s = np.random.default_rng(0).normal(size=50) + y
+    est = paired_bootstrap(lambda i: auroc(y[i], s[i]) - auroc(y[i], s[i]), y, n_boot=200)
+    assert (est.value, est.lo, est.hi) == (0.0, 0.0, 0.0)

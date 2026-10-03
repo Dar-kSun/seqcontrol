@@ -7,7 +7,7 @@ because a damaging variant makes the sequence less probable.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 
 import numpy as np
@@ -131,11 +131,33 @@ def bootstrap(
     of pathogenic and benign variants (and the metric is always defined).
     """
     y, s = _check(labels, scores)
-    rng = np.random.default_rng(seed)
-    pos, neg = np.flatnonzero(y == 1), np.flatnonzero(y == 0)
-    values = np.empty(n_boot)
-    for b in range(n_boot):
-        idx = np.r_[rng.choice(pos, len(pos)), rng.choice(neg, len(neg))]
-        values[b] = metric(y[idx], s[idx])
+    values = [metric(y[idx], s[idx]) for idx in stratified_resamples(y, n_boot, seed)]
     lo, hi = np.percentile(values, [2.5, 97.5])
     return Estimate(metric(y, s), float(lo), float(hi), n_boot)
+
+
+def stratified_resamples(labels, n_boot: int = 2000, seed: int = 0) -> Iterator[np.ndarray]:
+    """Index arrays resampling variants with replacement, keeping each class's count.
+
+    For paired comparisons (native vs control on the same variants), compute both
+    statistics on the same index array.
+    """
+    y = np.asarray(labels, dtype=int)
+    rng = np.random.default_rng(seed)
+    pos, neg = np.flatnonzero(y == 1), np.flatnonzero(y == 0)
+    for _ in range(n_boot):
+        yield np.r_[rng.choice(pos, len(pos)), rng.choice(neg, len(neg))]
+
+
+def paired_bootstrap(
+    statistic: Callable[[np.ndarray], float], labels, n_boot: int = 2000, seed: int = 0
+) -> Estimate:
+    """Estimate for `statistic(idx)`, a function of a variant index array.
+
+    Called once with all variants for the point value, then on each stratified
+    resample for the 95% percentile interval.
+    """
+    y = np.asarray(labels, dtype=int)
+    values = [statistic(idx) for idx in stratified_resamples(y, n_boot, seed)]
+    lo, hi = np.percentile(values, [2.5, 97.5])
+    return Estimate(statistic(np.arange(len(y))), float(lo), float(hi), n_boot)
