@@ -15,7 +15,8 @@ Reports, with 95% paired bootstrap intervals over variants:
   sensitivity/specificity at a threshold fixed on native scores (the paper's design);
   Spearman of per-variant dL, native vs each setting;
   the median dL shift, to separate a shifted score distribution from lost ranking.
-Writes results/permutation_<control>.csv and .json.
+Writes results/permutation_<control>.csv and .json. With --from-csv, skips scoring and
+recomputes every summary from the saved CSV (no GPU needed).
 """
 
 from __future__ import annotations
@@ -96,12 +97,8 @@ def window_rotation_windows(data, variants, units) -> dict[int, list[tuple[str, 
     return out
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--control", choices=["trna-swap", "window-rotation"], required=True)
-    parser.add_argument("--precision", choices=PRECISIONS, default="fp8-delayed")
-    args = parser.parse_args()
-
+def score(args) -> tuple[dict[int, np.ndarray], list[tuple], np.ndarray, list[str], dict]:
+    """Score every variant under every setting on the GPU; returns dL per setting."""
     data = mtdna.load()
     trnas = [g for g in data.genes if g.biotype == "Mt_tRNA"]
     units = merge_overlapping([Interval(g.name, g.start - 1, g.end) for g in trnas])
@@ -112,9 +109,8 @@ def main() -> None:
 
     build = trna_swap_windows if args.control == "trna-swap" else window_rotation_windows
     windows = build(data, variants, units)
-    settings = [s for s in windows if s != 0]
     unique = sorted({w for pairs in windows.values() for pair in pairs for w in pair})
-    print(f"{len(settings)} control settings + native; {len(unique)} distinct windows to score")
+    print(f"{len(windows) - 1} control settings + native; {len(unique)} distinct windows")
 
     model = Evo2Adapter("evo2_1b_base", precision=args.precision)
     model.load()
@@ -123,11 +119,58 @@ def main() -> None:
     elapsed = time.perf_counter() - t0
     print(f"scored in {elapsed:.0f} s")
     dl = {s: np.array([ll[a] - ll[r] for r, a in pairs]) for s, pairs in windows.items()}
+    keys = [(v.pos, v.ref, v.alt) for v in variants]
+    genes = [data.gene_of(v).name for v in variants]
+    provenance = {"model": model.label, "scored_at_commit": git_commit(),
+                  "score_date": dt.date.today().isoformat(),
+                  "scoring_seconds": round(elapsed, 1)}  # fmt: skip
+    return dl, keys, y, genes, provenance
+
+
+def read_scores(path) -> tuple[dict[int, np.ndarray], list[tuple], np.ndarray, list[str]]:
+    """Per-variant dL per setting from a CSV written by score()."""
+    dl, keys, labels, genes = {}, [], {}, {}
+    with open(path, newline="") as f:
+        for r in csv.DictReader(f):
+            k = (int(r["pos"]), r["ref"], r["alt"])
+            if k not in labels:
+                keys.append(k)
+                labels[k], genes[k] = int(r["label"]), r["gene"]
+            dl.setdefault(int(r["setting"]), []).append(float(r["delta"]))
+    return ({s: np.array(d) for s, d in dl.items()}, keys,
+            np.array([labels[k] for k in keys]), [genes[k] for k in keys])  # fmt: skip
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--control", choices=["trna-swap", "window-rotation"], required=True)
+    parser.add_argument("--precision", choices=PRECISIONS, default="fp8-delayed")
+    parser.add_argument(
+        "--from-csv", action="store_true", help="recompute summaries from the saved CSV (no GPU)"
+    )
+    args = parser.parse_args()
+
+    out = config.ROOT / "results"
+    stem = f"permutation_{args.control}"
+    if args.from_csv:
+        dl, keys, y, genes = read_scores(out / f"{stem}.csv")
+        old = json.loads((out / f"{stem}.json").read_text())
+        provenance = {k: old[k] for k in ("model", "scored_at_commit", "score_date",
+                                          "scoring_seconds")}  # fmt: skip
+    else:
+        dl, keys, y, genes, provenance = score(args)
+        with open(out / f"{stem}.csv", "w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["pos", "ref", "alt", "label", "gene", "setting", "delta"])
+            for s, d in dl.items():
+                for k, lab, g, x in zip(keys, y, genes, d, strict=True):
+                    w.writerow([*k, lab, g, s, x])
+    settings = [s for s in dl if s != 0]
 
     # Setting 0 must be exactly the M3 baseline.
-    with open(config.ROOT / "results" / f"baseline_{args.precision}.csv", newline="") as f:
+    with open(out / f"baseline_{args.precision}.csv", newline="") as f:
         base = {(int(r["pos"]), r["ref"], r["alt"]): float(r["delta"]) for r in csv.DictReader(f)}
-    native_from_baseline = np.array([base[(v.pos, v.ref, v.alt)] for v in variants])
+    native_from_baseline = np.array([base[k] for k in keys])
     if not np.array_equal(dl[0], native_from_baseline):
         diff = np.abs(dl[0] - native_from_baseline).max()
         raise AssertionError(f"unperturbed setting differs from baseline by up to {diff}")
@@ -148,6 +191,9 @@ def main() -> None:
     est = {
         "auroc_native": metrics.paired_bootstrap(auroc_native, y, N_BOOT),
         "auroc_control": metrics.paired_bootstrap(auroc_control, y, N_BOOT),
+        "auroc_drop": metrics.paired_bootstrap(
+            lambda i: auroc_native(i) - auroc_control(i), y, N_BOOT
+        ),
         "cdi": metrics.paired_bootstrap(cdi, y, N_BOOT),
         "auroc_control_of_mean_dL": metrics.bootstrap(
             metrics.auroc, y, -control.mean(axis=0), N_BOOT
@@ -178,7 +224,7 @@ def main() -> None:
 
     results = {
         "control": args.control,
-        "model": model.label,
+        **provenance,
         "window_bp": WINDOW,
         "n_pathogenic": int(y.sum()),
         "n_benign": int(len(y) - y.sum()),
@@ -194,25 +240,16 @@ def main() -> None:
         "thresholds": thresholds,
         "median_dL_shift": shift,
         "bootstrap": f"{N_BOOT} label-stratified resamples of variants, paired across settings",
-        "git_commit": git_commit(),
-        "run_date": dt.date.today().isoformat(),
-        "scoring_seconds": round(elapsed, 1),
+        "analysis_commit": git_commit(),
     }
 
-    out = config.ROOT / "results"
-    stem = f"permutation_{args.control}"
-    with open(out / f"{stem}.csv", "w", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(["pos", "ref", "alt", "label", "gene", "setting", "delta"])
-        for s, d in dl.items():
-            for v, x in zip(variants, d, strict=True):
-                w.writerow([v.pos, v.ref, v.alt, v.label, data.gene_of(v).name, s, x])
     (out / f"{stem}.json").write_text(json.dumps(results, indent=2) + "\n")
 
-    print(f"\n{args.control}, {model.label}, tRNA variants")
+    print(f"\n{args.control}, {provenance['model']}, tRNA variants")
     print(f"  AUROC native             {est['auroc_native']}")
     print(f"  AUROC control (mean of {len(settings)}) {est['auroc_control']}")
     print(f"  per-setting AUROC range  {min(per_setting_auroc):.3f} - {max(per_setting_auroc):.3f}")
+    print(f"  AUROC drop               {est['auroc_drop']}")
     print(f"  CDI                      {est['cdi']}")
     print(f"  Spearman dL native vs control: mean {np.mean(rho):.3f} "
           f"(range {min(rho):.3f} - {max(rho):.3f}); FP8-recipe noise floor ~0.95")  # fmt: skip
@@ -225,7 +262,8 @@ def main() -> None:
         print(
             f"  median dL {cls:10s} {m['native_median_dL']:+.5f} -> {m['control_median_dL']:+.5f}"
         )
-    print(f"\nwrote results/{stem}.csv and results/{stem}.json")
+    wrote = f"results/{stem}.json" if args.from_csv else f"results/{stem}.csv and .json"
+    print(f"\nwrote {wrote}")
 
 
 if __name__ == "__main__":

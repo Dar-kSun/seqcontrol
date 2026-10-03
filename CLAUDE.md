@@ -100,7 +100,11 @@ class Control(Protocol):
 ```
 
 ### 5.1 Context swap (cyclic permutation)
-Rotate the sequence window so the gene's internal sequence and ordering are preserved while its flanking context changes. Sweep rotation offsets. **Critical:** assert the gene's own bases are byte-identical before and after — a rotation that corrupts the gene invalidates the control. Write that assertion as a test.
+"Cyclic permutation" has two readings, and both are implemented (`seqcontrol/controls/permute.py`):
+- **tRNA swap** (primary; the source paper's design): on the whole chromosome, move each tRNA into the slot of the tRNA *k* places along, carrying its own sequence; sweep every *k*. Overlapping tRNAs move as one unit.
+- **Window rotation** (secondary): rotate the scoring window so the gene's internal sequence and ordering are preserved while its flanking context changes. Sweep rotation offsets, skipping any that would cut the gene.
+
+**Critical:** assert the gene's own bases are byte-identical before and after — a control that corrupts the gene invalidates it. This assertion runs on every perturbed sequence and is tested.
 
 ### 5.2 Flank shuffle
 Hold the gene fixed; dinucleotide-shuffle the flanks beyond radius *r*, for *r* in a sweep (e.g. 0, 50, 100, 250, 500, 1000, 2500 bp). Use **dinucleotide-preserving** shuffling (Altschul–Erikson), not naive shuffling — naive shuffling destroys base composition and confounds the result. Repeat with ≥10 random seeds and report variance.
