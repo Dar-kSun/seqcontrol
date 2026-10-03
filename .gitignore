@@ -24,3 +24,6 @@ weights/
 Thumbs.db
 .vscode/
 .idea/
+
+# Debug logs written by evo2/vortex at runtime
+*.log

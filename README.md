@@ -10,7 +10,7 @@ below is not yet implemented unless marked done.
 | Milestone | Status |
 |---|---|
 | M0: package skeleton, tests, CI | done |
-| M1: model adapter + smoke test | not yet implemented |
+| M1: smoke test (Evo 2 `evo2_1b_base` runs on an 8 GB laptop GPU; see `docs/model-choice.md`) | done |
 | M2: data loaders + manifest | not yet implemented |
 | M3: native baseline AUROC (mtDNA) | not yet implemented |
 | M4: cyclic-permutation (context-swap) control | not yet implemented |
@@ -26,6 +26,12 @@ pip install -e ".[dev]"
 ruff check .
 pytest
 ```
+
+## Model
+
+All results will use Evo 2 `evo2_1b_base` (1B parameters), the smallest Evo 2
+checkpoint, not the 7B or 40B models from the Evo 2 paper. Why, and how it was
+set up, is in `docs/model-choice.md`.
 
 ## Licence
 
