@@ -1,0 +1,13 @@
+##fileformat=VCFv4.1
+##fileDate=2026-09-28
+##source=ClinVar
+##reference=GRCh38
+##INFO=<ID=CLNREVSTAT,Number=.,Type=String,Description="ClinVar review status of germline classification for the Variation ID">
+##INFO=<ID=CLNSIG,Number=.,Type=String,Description="Aggregate germline classification for this single variant; multiple values are separated by a vertical bar">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+MT	15	4292995	C	T	.	.	CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Pathogenic
+MT	235	1344497	A	G	.	.	CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Benign
+MT	247	1343827	GA	G	.	.	CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Benign
+MT	1018	42203	G	A	.	.	CLNREVSTAT=criteria_provided,_multiple_submitters,_no_conflicts;CLNSIG=Benign
+MT	1420	42219	T	C	.	.	CLNREVSTAT=criteria_provided,_multiple_submitters,_no_conflicts;CLNSIG=Benign
+MT	5293	692567	G	A	.	.	CLNREVSTAT=reviewed_by_expert_panel;CLNSIG=Likely_benign

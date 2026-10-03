@@ -1,0 +1,13 @@
+##fileformat=VCFv4.2
+##fileDate=20261003
+##source=https://mitomap.org/cgi-bin/disease.cgi?format=vcf
+##reference=http://www.ncbi.nlm.nih.gov/nuccore/251831106
+##INFO=<ID=Disease,Number=.,Type=String,Description="Putative Disease Association">
+##INFO=<ID=DiseaseStatus,Number=.,Type=String,Description="Disease Association Status">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+MT	72	.	T	C	.	.	Disease=Protective-factor-for-stroke-risk-(hg-V);DiseaseStatus=Reported
+MT	616	.	T	C,G	.	.	Disease=Maternally-inherited-epilepsy-/-mito-tubulointerstitial-kidney-disease-(MITKD)-/-Gitelman-like-syndrome,Maternally-inherited-epilepsy;DiseaseStatus=Cfrm-[LP],Reported-[VUS]
+MT	1555	.	A	G	.	.	Disease=DEAF|-autism-spectrum-intellectual-disability|-possibly-antiatherosclerotic;DiseaseStatus=Cfrm-[P]
+MT	3243	.	A	G,T	.	.	Disease=MELAS-/-Leigh-Syndrome-/-DMDF-/-MIDD-/-SNHL-/-CPEO-/-MM-/-FSGS-/-ASD-/-Cardiac+multi-organ-dysfunction,MM-/-MELAS-/-SNHL-/-CPEO;DiseaseStatus=Cfrm-[P],Cfrm-[LP]
+MT	8344	.	A	G	.	.	Disease=MERRF|-Other---LD-/-depressive-mood-disorder-/-leukoencephalopathy-/-HiCM-/-lipomas;DiseaseStatus=Cfrm-[P]
+MT	3272	.	TT	T	.	.	Disease=PEM-/-retinal-dystrophy-in-MELAS;DiseaseStatus=Cfrm-[VUS*]

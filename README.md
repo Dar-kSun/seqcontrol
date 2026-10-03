@@ -11,7 +11,7 @@ below is not yet implemented unless marked done.
 |---|---|
 | M0: package skeleton, tests, CI | done |
 | M1: model adapter + smoke test (Evo 2 `evo2_1b_base` on an 8 GB laptop GPU; see `docs/model-choice.md`) | done |
-| M2: data loaders + manifest | not yet implemented |
+| M2: data loaders + manifest (94 pathogenic, 228 benign mtDNA SNVs; see `data/MANIFEST.md`) | done |
 | M3: native baseline AUROC (mtDNA) | not yet implemented |
 | M4: cyclic-permutation (context-swap) control | not yet implemented |
 | M5: flank-shuffle sweep | not yet implemented |
@@ -25,6 +25,7 @@ python -m venv .venv
 pip install -e ".[dev]"
 ruff check .
 pytest
+python scripts/fetch_data.py   # downloads ~200 MB into data/raw/, writes data/MANIFEST.md
 ```
 
 ## Model
