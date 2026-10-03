@@ -78,11 +78,27 @@ sequence's score depends on its batch-mates.
 **Decision:** `Evo2Adapter` always uses batch size 1 and does not expose a
 batch-size option. This is slower but exactly reproducible.
 
-**Open question:** even at batch size 1, FP8 rounding adds noise to each score,
-and variant effects are small. How much of a variant score is rounding noise
-has not been measured. One way to check is to compare against the same
-checkpoint run with FP8 off (the Evo 2 README suggests this lowers accuracy for
-the 1B model, so it would be a comparison, not a replacement).
+## Precision: FP8 recipe, history, and bf16
+
+`Evo2Adapter(precision=...)` offers three modes: `fp8-delayed` (Evo 2's shipped
+recipe, Transformer Engine `DelayedScaling` with a 16-step amax history; the
+default and the one all headline results use), `fp8-current` (TE current
+scaling) and `bf16` (no FP8).
+
+From `python scripts/check_precision.py`, run 2026-10-04:
+
+- **No dependence on scoring history.** A fixed target window scored after 16
+  random, poly-A or GC-rich sequences gets an identical score in every mode,
+  despite the delayed recipe's amax history. So scoring order does not matter
+  at batch size 1.
+- **bf16 is not usable.** With FP8 off, real mtDNA scores −1.356 per base,
+  close to uniform guessing (−1.386), against −1.095 with FP8. This matches
+  the Evo 2 README's statement that the 1B model needs FP8 for accuracy. It is
+  also possible that disabling FP8 after loading is not equivalent to a
+  native bf16 configuration; this was not investigated further.
+- **The two FP8 recipes give AUROC within 0.007 of each other on the full
+  variant set, but per-variant scores differ noticeably** (Spearman 0.944, 10%
+  of variants change sign). Details in `docs/findings.md`.
 
 ## Caveat: FP8 on a non-Hopper GPU
 

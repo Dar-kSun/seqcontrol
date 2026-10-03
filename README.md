@@ -12,7 +12,7 @@ below is not yet implemented unless marked done.
 | M0: package skeleton, tests, CI | done |
 | M1: model adapter + smoke test (Evo 2 `evo2_1b_base` on an 8 GB laptop GPU; see `docs/model-choice.md`) | done |
 | M2: data loaders + manifest (94 pathogenic, 228 benign mtDNA SNVs; see `data/MANIFEST.md`) | done |
-| M3: native baseline AUROC (mtDNA) | not yet implemented |
+| M3: native baseline (AUROC 0.856 [0.805, 0.903] on 322 mtDNA variants, `evo2_1b_base`; see `docs/findings.md`) | done |
 | M4: cyclic-permutation (context-swap) control | not yet implemented |
 | M5: flank-shuffle sweep | not yet implemented |
 | M6: trust card + CLI | not yet implemented |
@@ -26,6 +26,12 @@ pip install -e ".[dev]"
 ruff check .
 pytest
 python scripts/fetch_data.py   # downloads ~200 MB into data/raw/, writes data/MANIFEST.md
+```
+
+Scoring needs the Linux GPU environment (`scripts/setup_evo2_wsl.sh`), then:
+
+```bash
+python scripts/01_baseline.py  # ~2 min on an RTX 4060 Laptop GPU
 ```
 
 ## Model
