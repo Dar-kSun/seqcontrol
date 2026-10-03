@@ -5,11 +5,12 @@
 #
 # Usage, inside the WSL evo2 environment (see docs/model-choice.md):
 #     bash scripts/run_overnight.sh
-set -uo pipefail
+set -o pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 source "${CONDA_ROOT:-/opt/miniforge}/bin/activate" evo2
+set -u  # after activation: conda's activate script uses unset variables
 mkdir -p logs
 STATUS=logs/overnight_status.txt
 echo "queue started $(date -Is) on $(hostname), commit $(git rev-parse --short HEAD 2>/dev/null)" > "$STATUS"
