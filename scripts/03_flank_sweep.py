@@ -36,10 +36,23 @@ from seqcontrol.variants import variant_windows
 
 WINDOW = 1025
 HALF = WINDOW // 2
-RADII = [0, 25, 50, 100, 200, 300, 400]
+RADII = [0, 25, 50, 100, 200, 300, 400]  # default for 1,025 bp; --radii overrides
 N_SEEDS = 10
 SEED = 20261004
 N_BOOT = 2000
+
+
+def output_suffix(precision: str, window: int) -> str:
+    """'' for the headline configuration, else e.g. '_fp8-current' or '_w4097'."""
+    p = "" if precision == "fp8-delayed" else f"_{precision}"
+    return p + ("" if window == 1025 else f"_w{window}")
+
+
+def set_window(window: int) -> None:
+    global WINDOW, HALF
+    if window % 2 == 0:
+        raise ValueError("window must be odd so the variant sits exactly in the centre")
+    WINDOW, HALF = window, window // 2
 
 
 def git_commit() -> str:
@@ -106,19 +119,28 @@ def main() -> None:
     parser.add_argument(
         "--from-csv", action="store_true", help="recompute summaries from the saved CSV (no GPU)"
     )
+    parser.add_argument("--window", type=int, default=WINDOW, help="window length in bp (odd)")
+    parser.add_argument("--radii", help="comma-separated radii in bp (default 0..400)")
     args = parser.parse_args()
+    global RADII
+    set_window(args.window)
+    if args.radii:
+        RADII = [int(r) for r in args.radii.split(",")]
+    elif WINDOW != 1025:
+        parser.error("--radii is required with a non-default --window")
+    stem = "flank_sweep" + output_suffix(args.precision, WINDOW)
     out = config.ROOT / "results"
     header = ["pos", "ref", "alt", "label", "gene", "radius", "seed", "delta"]
 
     if args.from_csv:
-        with open(out / "flank_sweep.csv", newline="") as f:
+        with open(out / f"{stem}.csv", newline="") as f:
             rows = [[r[h] for h in header] for r in csv.DictReader(f)]
-        old = json.loads((out / "flank_sweep.json").read_text())
+        old = json.loads((out / f"{stem}.json").read_text())
         provenance = {k: old[k] for k in ("model", "scored_at_commit", "score_date",
                                           "scoring_seconds")}  # fmt: skip
     else:
         rows, provenance = score(args)
-        with open(out / "flank_sweep.csv", "w", newline="") as f:
+        with open(out / f"{stem}.csv", "w", newline="") as f:
             w = csv.writer(f)
             w.writerow(header)
             w.writerows(rows)
@@ -135,7 +157,8 @@ def main() -> None:
     y = np.array([labels[k] for k in keys])
     native = delta[(-1, -1)]
 
-    with open(out / f"baseline_{args.precision}.csv", newline="") as f:
+    baseline = f"baseline_{args.precision}" + (f"_w{WINDOW}" if WINDOW != 1025 else "")
+    with open(out / f"{baseline}.csv", newline="") as f:
         base = {(int(r["pos"]), r["ref"], r["alt"]): float(r["delta"]) for r in csv.DictReader(f)}
     if not np.array_equal(native, np.array([base[k] for k in keys])):
         raise AssertionError("native scores differ from the M3 baseline")
@@ -190,8 +213,8 @@ def main() -> None:
         "the mean over seeds, recomputed per resample",
         "analysis_commit": git_commit(),
     }
-    (out / "flank_sweep.json").write_text(json.dumps(results, indent=2) + "\n")
-    wrote = "results/flank_sweep.json" if args.from_csv else "results/flank_sweep.csv and .json"
+    (out / f"{stem}.json").write_text(json.dumps(results, indent=2) + "\n")
+    wrote = f"results/{stem}.json" if args.from_csv else f"results/{stem}.csv and .json"
     print(f"\nwrote {wrote}")
 
 

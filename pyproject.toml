@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
+plot = ["matplotlib>=3.8"]
 
 [project.scripts]
 seqcontrol = "seqcontrol.cli:app"

@@ -43,6 +43,19 @@ PAPER_THRESHOLD_DL = -0.0081
 N_BOOT = 2000
 
 
+def output_suffix(precision: str, window: int) -> str:
+    """'' for the headline configuration, else e.g. '_fp8-current' or '_w4097'."""
+    p = "" if precision == "fp8-delayed" else f"_{precision}"
+    return p + ("" if window == 1025 else f"_w{window}")
+
+
+def set_window(window: int) -> None:
+    global WINDOW, HALF
+    if window % 2 == 0:
+        raise ValueError("window must be odd so the variant sits exactly in the centre")
+    WINDOW, HALF = window, window // 2
+
+
 def git_commit() -> str:
     out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=config.ROOT,
                          capture_output=True, text=True)  # fmt: skip
@@ -148,10 +161,13 @@ def main() -> None:
     parser.add_argument(
         "--from-csv", action="store_true", help="recompute summaries from the saved CSV (no GPU)"
     )
+    parser.add_argument("--window", type=int, default=WINDOW, help="window length in bp (odd)")
     args = parser.parse_args()
+    set_window(args.window)
+    suffix = output_suffix(args.precision, WINDOW)
 
     out = config.ROOT / "results"
-    stem = f"permutation_{args.control}"
+    stem = f"permutation_{args.control}{suffix}"
     if args.from_csv:
         dl, keys, y, genes = read_scores(out / f"{stem}.csv")
         old = json.loads((out / f"{stem}.json").read_text())
@@ -168,7 +184,8 @@ def main() -> None:
     settings = [s for s in dl if s != 0]
 
     # Setting 0 must be exactly the M3 baseline.
-    with open(out / f"baseline_{args.precision}.csv", newline="") as f:
+    baseline = f"baseline_{args.precision}" + (f"_w{WINDOW}" if WINDOW != 1025 else "")
+    with open(out / f"{baseline}.csv", newline="") as f:
         base = {(int(r["pos"]), r["ref"], r["alt"]): float(r["delta"]) for r in csv.DictReader(f)}
     native_from_baseline = np.array([base[k] for k in keys])
     if not np.array_equal(dl[0], native_from_baseline):

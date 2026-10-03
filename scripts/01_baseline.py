@@ -70,12 +70,14 @@ def region_metrics(labels: np.ndarray, delta: np.ndarray) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--precision", choices=PRECISIONS, default="fp8-delayed")
+    parser.add_argument("--window", type=int, default=WINDOW, help="window length in bp (odd)")
     args = parser.parse_args()
+    window = args.window
 
     data = mtdna.load()
-    windows = [variant_windows(data.sequence, v, WINDOW, circular=True) for v in data.variants]
+    windows = [variant_windows(data.sequence, v, window, circular=True) for v in data.variants]
     unique = sorted({w for pair in windows for w in pair})
-    print(f"{len(data.variants)} variants, {len(unique)} distinct {WINDOW} bp windows to score")
+    print(f"{len(data.variants)} variants, {len(unique)} distinct {window} bp windows to score")
 
     model = Evo2Adapter("evo2_1b_base", precision=args.precision)
     model.load()
@@ -107,7 +109,7 @@ def main() -> None:
     region = np.array([r["region"] for r in rows])
     results = {
         "model": model.label,
-        "window_bp": WINDOW,
+        "window_bp": window,
         "score": "pathogenicity = -(mean LL(alt window) - mean LL(ref window))",
         "bootstrap": f"{N_BOOT} resamples, stratified by label, 95% percentile interval",
         "note": "youden_in_sample picks its threshold on the same variants it is scored on, "
@@ -131,14 +133,14 @@ def main() -> None:
 
     out = config.ROOT / "results"
     out.mkdir(exist_ok=True)
-    stem = f"baseline_{args.precision}"
+    stem = f"baseline_{args.precision}" + (f"_w{window}" if window != WINDOW else "")
     with open(out / f"{stem}.csv", "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
     (out / f"{stem}.json").write_text(json.dumps(results, indent=2) + "\n")
 
-    print(f"\n{model.label}, {WINDOW} bp windows")
+    print(f"\n{model.label}, {window} bp windows")
     for name in REGIONS:
         r = results["regions"][name]
         head = f"{name:15s} {r['n_pathogenic']:3d} P / {r['n_benign']:3d} B"

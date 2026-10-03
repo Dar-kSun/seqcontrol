@@ -27,3 +27,6 @@ Thumbs.db
 
 # Debug logs written by evo2/vortex at runtime
 *.log
+
+# Run logs (scripts/run_overnight.sh)
+logs/
