@@ -154,7 +154,7 @@
     }
   },
   "bootstrap": "2000 label-stratified resamples of variants; seed 0",
-  "analysis_commit": "fb29ddc",
+  "analysis_commit": "83f5c6a",
   "run_date": "2026-10-04",
   "versions": {
     "python": "3.13.14",

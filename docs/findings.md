@@ -6,7 +6,7 @@ confidence intervals.
 
 ## 2026-10-04: v0.3 Arm 2, context within tRNA genes (widened labels)
 
-Pre-declared in `docs/plan-v0.3-within-gene.md`, committed (96cb968) before
+Pre-declared in `docs/plan-v0.3-within-gene.md`, committed (9d25259) before
 anything was run. Model: Evo 2 `evo2_1b_base` (1B), shipped FP8 recipe,
 1,025 bp windows. This is a sensitivity analysis: benign labels are widened
 to ClinVar 1+ star (adding single-submitter calls), which makes them noisier,
@@ -62,7 +62,7 @@ within-gene signal depends on context can't be pinned down at this size.
 
 ## 2026-10-04: v0.3 Arm 1, within-gene discrimination on protein-coding variants
 
-Pre-declared in `docs/plan-v0.3-within-gene.md`, which was committed (96cb968)
+Pre-declared in `docs/plan-v0.3-within-gene.md`, which was committed (9d25259)
 before anything was run. Model: Evo 2 `evo2_1b_base` (1B), shipped FP8 recipe.
 Strict labels. This reuses the M3 baseline scores; nothing new was scored.
 Reproduce with `python scripts/06_within_gene.py --arm 1`. Intervals come from
@@ -94,8 +94,8 @@ scoring window. Single scoring run.
 ## 2026-10-04: v0.2 analyses B and A (pre-declared)
 
 Both analyses follow `docs/plan-v0.2-threshold-and-gene.md`, which was
-committed before either was run (the draft is d685ed8 and the amendments are
-d76533a; the amendments are also listed at the top of the plan). The decision
+committed before either was run (the draft is 78d1744 and the amendments are
+0060cdd; the amendments are also listed at the top of the plan). The decision
 rules are applied in code. Neither needs a GPU, since both work from the
 committed per-variant scores. Model: Evo 2 `evo2_1b_base` (1B), shipped FP8
 recipe; 67 tRNA variants (44 pathogenic, 23 benign) in 20 genes; single
@@ -331,8 +331,8 @@ of the conclusions change:
 | Flank shuffle r = 400: Spearman | 0.93 | 0.94 |
 
 A note on provenance: `results/flank_sweep.json` was scored by the code at
-commit e25d6d0, but the run only read HEAD when it finished, so it first
-stamped 774e095. The stamp was corrected by hand. The scoring code for default
+commit b08682f, but the run only read HEAD when it finished, so it first
+stamped 2ac2067. The stamp was corrected by hand. The scoring code for default
 arguments is the same at both commits.
 
 ## 2026-10-04: context-swap controls on tRNA variants (M4)

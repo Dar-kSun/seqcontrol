@@ -1,7 +1,7 @@
 {
   "control": "window-rotation",
   "model": "evo2_1b_base (fp8-current)",
-  "scored_at_commit": "774e095",
+  "scored_at_commit": "2ac2067",
   "score_date": "2026-10-03",
   "scoring_seconds": 386.9,
   "window_bp": 1025,
@@ -118,5 +118,5 @@
     }
   },
   "bootstrap": "2000 label-stratified resamples of variants, paired across settings",
-  "analysis_commit": "774e095"
+  "analysis_commit": "2ac2067"
 }

@@ -180,7 +180,7 @@
   "description": "tRNA variants, widened labels (ClinVar benign 1+ star)",
   "model": "evo2_1b_base (fp8-delayed)",
   "bootstrap": "2000 cluster resamples over genes, redrawn until usable; seed 0",
-  "analysis_commit": "66e21da",
+  "analysis_commit": "e9da30c",
   "run_date": "2026-10-04",
   "versions": {
     "python": "3.13.14",

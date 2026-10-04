@@ -1,7 +1,7 @@
 {
   "control": "trna-swap",
   "model": "evo2_1b_base (fp8-delayed)",
-  "scored_at_commit": "18cc60f",
+  "scored_at_commit": "7f1ecae",
   "score_date": "2026-10-04",
   "scoring_seconds": 3263.4,
   "window_bp": 1025,
@@ -130,5 +130,5 @@
     }
   },
   "bootstrap": "2000 label-stratified resamples of variants, paired across settings",
-  "analysis_commit": "18cc60f"
+  "analysis_commit": "7f1ecae"
 }

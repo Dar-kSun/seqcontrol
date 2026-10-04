@@ -137,7 +137,7 @@
     "mitomap_disease.vcf": "23fe09e3707a8438726c126a0d250965ff678e00ba725eeddd472d6ebc368ea2",
     "mitomap_polymorphisms.vcf": "7923efc0c5162592981af03af5bbcb1f08e922c27d2da5b2b81597332d347367"
   },
-  "git_commit": "18cc60f",
+  "git_commit": "7f1ecae",
   "run_date": "2026-10-04",
   "scoring_seconds": 854.6
 }

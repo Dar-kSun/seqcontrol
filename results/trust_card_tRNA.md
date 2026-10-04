@@ -57,4 +57,4 @@ python scripts/03_flank_sweep.py
 seqcontrol card
 ```
 
-Scored at commits 568d02d, 8332617; data checksums in `data/MANIFEST.md`.
+Scored at commits 13d52d7, c325f30; data checksums in `data/MANIFEST.md`.

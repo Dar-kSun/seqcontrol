@@ -291,7 +291,7 @@
     }
   },
   "bootstrap": "2000 cluster resamples over genes (B1-B4), redrawn until usable; B5 over variants; seed 0",
-  "analysis_commit": "0a1da26",
+  "analysis_commit": "0c9ffbb",
   "run_date": "2026-10-04",
   "versions": {
     "python": "3.13.14",
