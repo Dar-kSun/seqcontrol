@@ -1,0 +1,142 @@
+{
+  "model": "evo2_1b_base (fp8-current)",
+  "window_bp": 4097,
+  "score": "pathogenicity = -(mean LL(alt window) - mean LL(ref window))",
+  "bootstrap": "2000 resamples, stratified by label, 95% percentile interval",
+  "note": "youden_in_sample picks its threshold on the same variants it is scored on, so it is optimistic; at_paper_threshold uses the paper's fixed cut-off",
+  "regions": {
+    "all": {
+      "n_pathogenic": 94,
+      "n_benign": 228,
+      "auroc": {
+        "value": 0.8337066069428891,
+        "ci95": [
+          0.7803284807764092,
+          0.8840087252706234
+        ],
+        "n_boot": 2000
+      },
+      "auprc": {
+        "value": 0.7213774059432744,
+        "ci95": [
+          0.6427679346144596,
+          0.8021454531022927
+        ],
+        "n_boot": 2000
+      },
+      "auprc_no_skill": 0.2919254658385093,
+      "youden_in_sample": {
+        "threshold_dL": -0.0007621347904205322,
+        "sensitivity": 0.8297872340425532,
+        "specificity": 0.7324561403508771
+      },
+      "at_paper_threshold": {
+        "threshold_dL": -0.0081,
+        "sensitivity": 0.02127659574468085,
+        "specificity": 1.0
+      }
+    },
+    "Mt_tRNA": {
+      "n_pathogenic": 44,
+      "n_benign": 23,
+      "auroc": {
+        "value": 0.7598814229249012,
+        "ci95": [
+          0.6413043478260869,
+          0.8666254940711461
+        ],
+        "n_boot": 2000
+      },
+      "auprc": {
+        "value": 0.8739103316435146,
+        "ci95": [
+          0.8050933582599847,
+          0.9366799838621449
+        ],
+        "n_boot": 2000
+      },
+      "auprc_no_skill": 0.6567164179104478,
+      "youden_in_sample": {
+        "threshold_dL": -0.0007621347904205322,
+        "sensitivity": 0.7727272727272727,
+        "specificity": 0.6956521739130435
+      },
+      "at_paper_threshold": {
+        "threshold_dL": -0.0081,
+        "sensitivity": 0.022727272727272728,
+        "specificity": 1.0
+      }
+    },
+    "protein_coding": {
+      "n_pathogenic": 48,
+      "n_benign": 193,
+      "auroc": {
+        "value": 0.9014464594127807,
+        "ci95": [
+          0.8487640328151986,
+          0.9454906088082901
+        ],
+        "n_boot": 2000
+      },
+      "auprc": {
+        "value": 0.7309561472666649,
+        "ci95": [
+          0.624339997187758,
+          0.8420925441641836
+        ],
+        "n_boot": 2000
+      },
+      "auprc_no_skill": 0.1991701244813278,
+      "youden_in_sample": {
+        "threshold_dL": -0.0009087324142456055,
+        "sensitivity": 0.8958333333333334,
+        "specificity": 0.772020725388601
+      },
+      "at_paper_threshold": {
+        "threshold_dL": -0.0081,
+        "sensitivity": 0.020833333333333332,
+        "specificity": 1.0
+      }
+    },
+    "Mt_rRNA": {
+      "n_pathogenic": 2,
+      "n_benign": 12,
+      "auroc": {
+        "value": 0.5416666666666666,
+        "ci95": [
+          0.0,
+          1.0
+        ],
+        "n_boot": 2000
+      },
+      "auprc": {
+        "value": 0.3333333333333333,
+        "ci95": [
+          0.14285714285714285,
+          1.0
+        ],
+        "n_boot": 2000
+      },
+      "auprc_no_skill": 0.14285714285714285,
+      "youden_in_sample": {
+        "threshold_dL": -0.0009883642196655273,
+        "sensitivity": 0.5,
+        "specificity": 0.9166666666666666
+      },
+      "at_paper_threshold": {
+        "threshold_dL": -0.0081,
+        "sensitivity": 0.0,
+        "specificity": 1.0
+      }
+    }
+  },
+  "data_sha256": {
+    "chrM_GRCh38.fa": "7ee6821c2117e356d9870177997933208d4d5f2e9370443d9989c46964e4575d",
+    "chrM_GRCh38_genes.json": "18d4b981733f95f5bfe9c0ad9361c1fe433459411b26ebd1d9793470b0757aaa",
+    "clinvar_20260928.vcf.gz": "e0ac8e4d2d8f08d3faf845c5b5baa46b2051a8254cb0be4509a586fb15b81cb0",
+    "mitomap_disease.vcf": "23fe09e3707a8438726c126a0d250965ff678e00ba725eeddd472d6ebc368ea2"
+  },
+  "git_commit": "408f2b0",
+  "run_date": "2026-10-04",
+  "scoring_seconds": 1627.6
+}

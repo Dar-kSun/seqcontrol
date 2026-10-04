@@ -3,6 +3,55 @@
 The running results log. Each entry records the date, the model checkpoint, the
 command that produced the number, and the number with its confidence interval.
 
+## 2026-10-04: wider windows (4,097 bp)
+
+**Model: Evo 2 `evo2_1b_base` (1B). Single run per configuration.** The
+1,025 bp windows cap the flank sweep at r = 400 bp, so the baseline and sweep
+were repeated with 4,097 bp windows (radii up to 1,900 bp). Reproduce:
+`python scripts/01_baseline.py --window 4097` (with `--precision fp8-current`
+for the second recipe) and
+`python scripts/03_flank_sweep.py --window 4097 --radii 0,50,100,250,500,1000,1500,1900`
+(~3.5 h on the GPU); the comparison below is
+`python scripts/compare_runs.py results/baseline_fp8-delayed_w4097.csv results/baseline_fp8-current_w4097.csv`.
+
+**Rounding noise is four times worse at 4,097 bp.** The variant's effect is
+averaged over four times as many positions, so median |ΔL| falls from 0.0028
+to 0.00075, while FP8 rounding noise does not shrink with it:
+
+| | 1,025 bp | 4,097 bp |
+|---|---|---|
+| Spearman of ΔL between the two FP8 recipes, tRNA | 0.95 | **0.84** |
+| Same sign between recipes, all variants | 90.1% | 86.0% |
+| Native AUROC, all variants (shipped / current-scaling recipe) | 0.856 / 0.849 | 0.815 / 0.834 |
+| Native AUROC, tRNA (shipped / current-scaling) | 0.824 / 0.813 | 0.779 / 0.760 |
+| AUROC difference between recipes, protein-coding | 0.009 [−0.012, 0.029] | **−0.031 [−0.063, −0.004]** |
+
+At 4,097 bp the rounding recipe alone changes protein-coding AUROC by a
+detectable amount. Longer windows give this model no better discrimination
+(all-variant AUROC 0.815–0.834 against 0.849–0.856 at 1,025 bp) and noisier
+scores; per-variant ΔL at the two window sizes correlates at Spearman 0.86.
+Results at 1,025 bp remain the headline.
+
+**Flank sweep at 4,097 bp** (shipped recipe, native tRNA AUROC 0.779):
+
+| Untouched flank *r* | Spearman of ΔL vs native | AUROC | CDI |
+|---|---|---|---|
+| 0 bp | 0.49 [0.30, 0.64] | 0.733 [0.637, 0.830] | 0.16 [−0.36, 0.48] |
+| 50 bp | 0.63 [0.45, 0.76] | 0.742 [0.635, 0.845] | 0.13 [−0.36, 0.45] |
+| 100 bp | 0.68 [0.50, 0.81] | 0.752 [0.642, 0.851] | 0.09 [−0.38, 0.41] |
+| 250 bp | 0.70 [0.54, 0.82] | 0.782 [0.679, 0.868] | −0.01 [−0.52, 0.28] |
+| 500 bp | 0.80 [0.65, 0.90] | 0.792 [0.689, 0.878] | −0.05 [−0.46, 0.20] |
+| 1,000 bp | 0.79 [0.64, 0.90] | 0.800 [0.699, 0.887] | −0.08 [−0.49, 0.15] |
+| 1,500 bp | 0.86 [0.78, 0.91] | 0.775 [0.669, 0.863] | 0.01 [−0.29, 0.21] |
+| 1,900 bp | 0.86 [0.77, 0.91] | 0.773 [0.670, 0.863] | 0.02 [−0.28, 0.22] |
+
+Read against the 0.84 noise floor, **shuffling context more than ~500 bp from
+the tRNA has no detectable effect** on per-variant scores, and none on AUROC
+beyond ~250 bp. This agrees with the 1,025 bp sweep: what the model uses is
+local. The CDI intervals here are much wider than at 1,025 bp because the
+native AUROC is closer to chance and the scores are noisier, so this run
+cannot say how much signal the full scramble removes.
+
 ## 2026-10-04: flank-shuffle sweep (M5)
 
 **Model: Evo 2 `evo2_1b_base` (1B), Evo 2's shipped FP8 recipe. 67 tRNA
