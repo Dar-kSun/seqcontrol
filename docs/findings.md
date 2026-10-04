@@ -3,6 +3,76 @@
 The running results log. Each entry records the date, the model checkpoint, the
 command that produced the number, and the number with its confidence interval.
 
+## 2026-10-04: flank-shuffle sweep (M5)
+
+**Model: Evo 2 `evo2_1b_base` (1B), Evo 2's shipped FP8 recipe. 67 tRNA
+variants (44 pathogenic, 23 benign), 1,025 bp windows, 10 shuffle seeds per
+radius.**
+
+![Flank-shuffle sweep](../results/flank_sweep.png)
+
+Each tRNA is held fixed. Everything more than *r* bp outside it, on either
+side, is replaced by a dinucleotide-preserving (Altschul–Erikson) shuffle of
+itself. At r = 0 all context is scrambled; at r = 400 only the outer
+~40–80 bp at each end of the window are. Base composition and dinucleotide
+counts never change, so only the *order* of the context is tested.
+
+Reproduce: `python scripts/03_flank_sweep.py` (GPU, ~40 min) or `--from-csv`
+(seconds), then `python scripts/plot_flank_sweep.py`.
+
+| Untouched flank *r* | Spearman of ΔL vs native | AUROC (native 0.824) | CDI | Seed SD (ρ / AUROC) |
+|---|---|---|---|---|
+| 0 bp | 0.47 [0.30, 0.62] | 0.710 [0.615, 0.803] | **0.35 [0.01, 0.63]** | 0.054 / 0.045 |
+| 25 bp | 0.56 [0.39, 0.71] | 0.694 [0.581, 0.802] | 0.40 [0.10, 0.72] | 0.063 / 0.027 |
+| 50 bp | 0.67 [0.52, 0.79] | 0.739 [0.627, 0.837] | 0.26 [0.01, 0.53] | 0.043 / 0.046 |
+| 100 bp | 0.77 [0.66, 0.86] | 0.765 [0.652, 0.861] | 0.18 [−0.12, 0.44] | 0.028 / 0.029 |
+| 200 bp | 0.86 [0.77, 0.92] | 0.799 [0.698, 0.886] | 0.08 [−0.20, 0.27] | 0.026 / 0.022 |
+| 300 bp | 0.91 [0.85, 0.94] | 0.800 [0.700, 0.887] | 0.07 [−0.12, 0.23] | 0.014 / 0.020 |
+| 400 bp | 0.93 [0.89, 0.95] | 0.797 [0.688, 0.888] | 0.09 [−0.06, 0.22] | 0.013 / 0.019 |
+
+Each statistic is the mean over the 10 seeds; intervals are 95% from 2,000
+label-stratified bootstrap resamples of variants (paired with native); seed
+SD is the spread across seeds on all variants.
+
+What this shows:
+
+1. **Scrambling all context costs about a third of the above-chance
+   signal.** At r = 0, AUROC falls to 0.710 and CDI is 0.35, the only
+   setting in this repo so far whose CDI interval excludes zero (and only
+   just: lower bound 0.006). Scrambling the context removes more signal
+   than moving the tRNA to another tRNA's real neighbourhood (M4: AUROC
+   0.750, CDI 0.23).
+2. **The model's dependence on context is local.** Score stability rises
+   steadily with the untouched radius and reaches 0.93 at 400 bp, close to
+   the 0.95 floor set by FP8 rounding noise alone. Discrimination recovers
+   faster: from r = 200 bp on, AUROC is ~0.80 and CDI intervals include
+   zero.
+3. **Seeds agree.** Across 10 shuffles, AUROC varies by SD ≤ 0.046 at any
+   radius, so the variant sample (n = 67), not the shuffle, dominates the
+   uncertainty.
+4. **Even the gene alone keeps most of the signal.** At r = 0, AUROC 0.710 is
+   still well above 0.5: most of the discrimination survives with nothing
+   but the tRNA's own sequence in its true order.
+
+### Robustness: FP8 recipe
+
+All three controls were re-run with Transformer Engine's current-scaling FP8
+recipe (`--precision fp8-current`; results files with that suffix). The
+conclusions do not change:
+
+| | Shipped recipe (headline) | Current scaling |
+|---|---|---|
+| Native tRNA AUROC | 0.824 | 0.813 |
+| tRNA swap: AUROC under control / CDI | 0.750 / 0.23 [−0.12, 0.45] | 0.747 / 0.21 [−0.12, 0.44] |
+| Window rotation: CDI | 0.09 [−0.05, 0.23] | 0.08 [−0.06, 0.20] |
+| Flank shuffle r = 0: AUROC / CDI | 0.710 / 0.35 [0.01, 0.63] | 0.701 / 0.36 [0.03, 0.63] |
+| Flank shuffle r = 400: Spearman | 0.93 | 0.94 |
+
+Provenance note: `results/flank_sweep.json` was scored by code at commit
+05b672a; the run read HEAD only when it finished and first stamped 91eb3c5.
+The stamp was corrected by hand. The scoring code for default arguments is
+the same at both commits.
+
 ## 2026-10-04: context-swap controls on tRNA variants (M4)
 
 **Model: Evo 2 `evo2_1b_base` (1B), Evo 2's shipped FP8 recipe. 67 tRNA
@@ -29,7 +99,7 @@ Reproduce: `python scripts/02_permutation.py --control trna-swap` (GPU,
 | AUROC under control (mean over settings) | 0.750 [0.661, 0.826] | 0.793 [0.692, 0.877] |
 | Range across settings | 0.657 – 0.835 | 0.745 – 0.843 |
 | **AUROC drop** | **0.074 [−0.030, 0.162]** | 0.031 [−0.015, 0.072] |
-| **CDI** | **0.23 [−0.12, 0.46]** | 0.10 [−0.05, 0.23] |
+| **CDI** | **0.23 [−0.12, 0.45]** | 0.09 [−0.05, 0.23] |
 | Spearman of ΔL, native vs control (mean) | **0.56** (0.40 – 0.71) | 0.90 (0.77 – 0.96) |
 | Sensitivity / specificity at native-Youden cut-off (ΔL ≤ −0.0030) | 0.82 / 0.83 → **0.56 / 0.83** | 0.82 / 0.83 → 0.69 / 0.80 |
 | Sensitivity / specificity at the paper's cut-off (ΔL ≤ −0.0081) | 0.23 / 1.00 → 0.16 / 1.00 | 0.23 / 1.00 → 0.22 / 1.00 |
@@ -57,7 +127,7 @@ What this shows:
    specificity is unchanged. This is the mechanism suggested in the M2 entry
    for the paper's 65.8% → 5.1% collapse: a compressed score distribution
    crossing a fixed threshold, rather than (only) lost discrimination.
-4. **Window rotation is a milder control** (Spearman 0.90, CDI 0.10). It
+4. **Window rotation is a milder control** (Spearman 0.90, CDI 0.09). It
    keeps the same bases in the window and only rearranges them, so it tests
    sensitivity to arrangement and to an artificial junction, not to a
    genuinely different neighbourhood.
