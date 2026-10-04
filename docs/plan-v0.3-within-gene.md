@@ -1,8 +1,8 @@
-# Plan v0.3 — pre-declared: does the model read variants *within* genes?
+# Plan v0.3 (pre-declared): does the model read variants *within* genes?
 
 **Status: pre-declared. Committed before anything in it is run.**
 
-Written by Claude (the coding assistant) on 2026-10-04, after v0.2's Analysis B
+Written on 2026-10-04, after v0.2's Analysis B
 found that gene identity is a substantial part of the tRNA AUROC and that the
 strict tRNA set has too few within-gene pairs (45) to separate gene identity
 from variant effect.
@@ -21,7 +21,7 @@ The frequency-based option is dropped: too few pairs.
 
 ---
 
-## Arm 1 — protein-coding variants, within genes (primary; no GPU)
+## Arm 1: protein-coding variants, within genes (primary; no GPU)
 
 Uses the committed M3 scores (`results/baseline_fp8-delayed.csv`, region
 `protein_coding`: 48 pathogenic, 193 benign, 13 genes). New script
@@ -43,7 +43,7 @@ No context control is run on protein-coding variants in this plan: the genes
 are longer than the scoring window, so "hold the gene, change its context"
 does not apply as built.
 
-## Arm 2 — tRNA variants with a widened benign set (sensitivity analysis; GPU)
+## Arm 2: tRNA variants with a widened benign set (sensitivity analysis; GPU)
 
 Benign labels widened from ClinVar ≥ 2 stars to **≥ 1 star** (adds single-
 submitter Benign / Likely benign). Pathogenic labels unchanged (MITOMAP

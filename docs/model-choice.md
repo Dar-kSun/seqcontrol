@@ -1,10 +1,9 @@
 # Model choice
 
-**Model used: Evo 2, `evo2_1b_base` (1 billion parameters, 8 kb context).**
-Every result in this repo comes from this checkpoint unless a result says
-otherwise. It is the smallest Evo 2 model, and much smaller than the 7B and 40B
-models used in the Evo 2 paper. Results here should not be read as results for
-those larger models.
+Every result in this repo comes from Evo 2 `evo2_1b_base` (1 billion
+parameters, 8 kb context) unless it says otherwise. That's the smallest Evo 2
+model, much smaller than the 7B and 40B models in the Evo 2 paper, so nothing
+here should be read as a result for those larger models.
 
 Decided 2026-10-03.
 
@@ -23,7 +22,7 @@ Decided 2026-10-03.
 |---|---|
 | Evo 2 natively on Windows | Not supported: Evo 2 needs Linux, flash-attn and (for 1B) Transformer Engine. Not attempted. |
 | `evo2_7b` (bf16, no FP8 needed) | Weights alone are ~14 GB in bf16; does not fit in 8 GB VRAM. Not attempted. |
-| **`evo2_1b_base` under WSL2** | **Works.** See measurements below. |
+| `evo2_1b_base` under WSL2 | Works; measurements below. |
 | `evo2_20b`, `evo2_40b` | Far beyond 8 GB. Not attempted. |
 | Hosted API (NVIDIA NIM) or HyenaDNA | Held in reserve; not needed for v0.1. |
 
@@ -50,8 +49,8 @@ mean log-likelihood per base:
 | 3 mononucleotide shuffles | −1.3769, −1.3732, −1.3732 |
 | Uniform guessing (ln 0.25) | −1.3863 |
 
-The model finds real mtDNA clearly more probable than shuffles of it, which sit
-near chance. Repeat runs at the same batch size give bit-identical scores.
+The model finds real mtDNA clearly more probable than shuffled copies of it,
+which sit close to chance. Repeat runs at the same batch size give bit-identical scores.
 
 (Correction: an earlier version of this file, in commit 96ccdc1, said batched
 and one-at-a-time scoring agree to 6 decimal places. Both runs in that check
@@ -75,8 +74,8 @@ size 1 and 16, 3 of the 8 variant scores changed sign. A likely cause, not
 verified, is that FP8 scaling factors are computed over the whole batch, so a
 sequence's score depends on its batch-mates.
 
-**Decision:** `Evo2Adapter` always uses batch size 1 and does not expose a
-batch-size option. This is slower but exactly reproducible.
+So `Evo2Adapter` always uses a batch size of 1 and doesn't offer a batch-size
+option. It's slower, but exactly reproducible.
 
 ## Precision: FP8 recipe, history, and bf16
 
@@ -87,18 +86,18 @@ scaling) and `bf16` (no FP8).
 
 From `python scripts/check_precision.py`, run 2026-10-04:
 
-- **No dependence on scoring history.** A fixed target window scored after 16
+- Scores don't depend on what was scored before. A fixed target window scored after 16
   random, poly-A or GC-rich sequences gets an identical score in every mode,
   despite the delayed recipe's amax history. So scoring order does not matter
   at batch size 1.
-- **bf16 is not usable.** With FP8 off, real mtDNA scores −1.356 per base,
+- bf16 isn't usable. With FP8 off, real mtDNA scores −1.356 per base,
   close to uniform guessing (−1.386), against −1.095 with FP8. This matches
   the Evo 2 README's statement that the 1B model needs FP8 for accuracy. It is
   also possible that disabling FP8 after loading is not equivalent to a
   native bf16 configuration; this was not investigated further.
-- **The two FP8 recipes give AUROC within 0.007 of each other on the full
-  variant set, but per-variant scores differ noticeably** (Spearman 0.944, 10%
-  of variants change sign). Details in `docs/findings.md`.
+- The two FP8 recipes give AUROCs within 0.007 of each other on the full
+  variant set, but per-variant scores differ noticeably (Spearman 0.944, and
+  10% of variants change sign). Details in `docs/findings.md`.
 
 ## Caveat: FP8 on a non-Hopper GPU
 
@@ -106,7 +105,7 @@ The Evo 2 README says the 1B model needs FP8 via Transformer Engine "and a
 Nvidia Hopper GPU". This GPU is Ada (sm_89), which supports FP8 in hardware,
 and the model runs here with FP8 input projections enabled
 (`use_fp8_input_projections: True`) and no errors. The sanity check above shows
-the output is meaningful, but it is a weak check: it does **not** show the
+the output is meaningful, but that's a weak check. It doesn't show that the
 scores match what the same checkpoint produces on Hopper. If a reference score
 from Hopper hardware becomes available, compare against it and record the
 difference here.

@@ -1,4 +1,4 @@
-# Plan v0.2 — pre-declared: the threshold artefact, and the gene-identity confound
+# Plan v0.2 (pre-declared): the threshold artefact and the gene-identity confound
 
 **Status: pre-declared. Written before any of these numbers were computed.**
 Commit this file *before* running anything in it. Pre-declaring the analyses
@@ -56,7 +56,7 @@ catastrophic; the ranking need not change much.
 
 ---
 
-# Analysis A — Is the collapse a threshold artefact?
+# Analysis A: is the collapse a threshold artefact?
 
 No GPU. Operates on committed per-variant scores. Should run in seconds.
 
@@ -66,7 +66,7 @@ New script: `scripts/04_threshold_artefact.py`. New module:
 ## A0. The mathematical fact to exploit (state it in the write-up)
 
 AUROC depends only on the *ordering* of scores. Multiplying every score by a
-constant α > 0 is strictly monotone, so **AUROC is unchanged exactly** — not
+constant α > 0 is strictly monotone, so AUROC is unchanged exactly, not
 approximately. But a cut-off fixed in absolute units does change: scoring
 ΔL ≤ t after scaling by α is identical to scoring ΔL ≤ t/α on the native
 scores, i.e. a moving threshold.
@@ -85,7 +85,7 @@ native ΔL:
 Report, per α:
 - Sensitivity and specificity at the **paper's** cut-off (ΔL ≤ −0.0081).
 - Sensitivity and specificity at **this repo's native-Youden** cut-off (−0.0030).
-- AUROC (flat by construction — plot it to make the point visually).
+- AUROC (flat by construction; plot it anyway to make the point visually).
 
 **Figure (`results/threshold_artefact.png`):** α on x. Sensitivity and
 specificity as lines; AUROC as a flat line across the top. Mark the α that
@@ -111,7 +111,7 @@ The R² is important and must be reported prominently: it says how well a
 swap is 0.56, well below the 0.95 noise floor, so a pure-scale model is known to
 be incomplete. **Quantify the shortfall rather than hiding it.**
 
-## A3. The decomposition — the actual scientific claim
+## A3. The decomposition (the actual scientific claim)
 
 Three quantities, reported as one table:
 
@@ -128,7 +128,7 @@ Then state plainly:
 - **Residual ranking loss beyond compression:** `AUROC_native − AUROC_swap`
   = 0.074 [−0.030, 0.162], which at n = 67 is **not significant**.
 
-### Pre-declared interpretation rules — fix these now
+### Pre-declared interpretation rules, fixed now
 
 - If compression explains **≥ 70%** of the sensitivity drop and the AUROC drop
   stays non-significant → conclude: *on this setup, the collapse is primarily a
@@ -151,7 +151,7 @@ construction it has the swap's scale and the native ranking.
 
 ## A5. Speaking to the paper's 65.8% → 5.1% specifically
 
-**This cannot be reproduced on this dataset** — native sensitivity here at the
+This can't be reproduced on this dataset: native sensitivity here at the
 paper's cut-off is 22.7%, not 65.8%. The operating points differ.
 
 So do this as an explicitly-labelled **illustration, not a reproduction**:
@@ -163,7 +163,7 @@ So do this as an explicitly-labelled **illustration, not a reproduction**:
 2. Apply compression α and recompute sensitivity and specificity at the
    **fixed** cut-off.
 3. Report the α that lands at 5.1% sensitivity, and confirm specificity *rises*
-   (the paper reports 93.8%) — the rising-specificity signature is the strongest
+   (the paper reports 93.8%). Rising specificity is the strongest
    evidence for compression, because real discrimination loss does not push both
    metrics the same direction.
 4. Confirm AUROC is unchanged throughout.
@@ -176,7 +176,7 @@ pattern.
 
 ---
 
-# Analysis B — Does gene identity explain the native AUROC?
+# Analysis B: does gene identity explain the native AUROC?
 
 **Run this first.** If native AUROC is mostly gene identity, A's framing needs
 restating, because then the controls are disrupting gene recognition rather than
@@ -188,7 +188,7 @@ variant at all.
 
 New script: `scripts/05_gene_confound.py`.
 
-## B1. The gene-prior baseline (do this first — it's one function)
+## B1. The gene-prior baseline (do this first; it's one function)
 
 A "model" that ignores the variant entirely and scores each variant by its
 gene's pathogenic fraction in this dataset. Two versions, both reported:
@@ -224,9 +224,9 @@ construction.
 
 - **Report the number of usable within-gene pairs first.** With 67 variants
   across ~22 genes, many genes carry one class only. If usable pairs are few
-  (say < 100), the honest conclusion is *this dataset cannot separate gene
-  identity from variant effect*, and that is a legitimate, publishable-shaped
-  finding about the benchmark — not a failure.
+  (say < 100), the conclusion is *this dataset cannot separate gene
+  identity from variant effect*. That is a real finding about the benchmark,
+  not a failure.
 - CIs by **cluster bootstrap over genes**, not over variants.
 - **Known before commit:** there are 45 usable pairs (amendment 5), below the
   100-pair threshold. So the pre-declared conclusion is already that *this
@@ -247,7 +247,7 @@ AUROC from B2. With 45 pairs this is underpowered (amendment 5), so report the
 numbers with their CIs and label them as such; do not draw CDI conclusions from
 them.
 
-## B5. The familiarity confound — scope it, don't solve it
+## B5. The familiarity confound: scope it, don't solve it
 
 Most benign mtDNA variants here are common population polymorphisms, so the
 model may be scoring *how familiar this spelling looks* rather than functional
@@ -291,7 +291,7 @@ move on.
    - the gene-prior AUROC from B1 stated near the headline, whatever it says,
    - the headline rewritten if B1 or B3 undermines it.
 
-# Honesty requirements specific to this work
+# Reporting requirements specific to this work
 
 - The repo's position is **"here is the mechanism behind the published
   number,"** never "the paper is wrong." The paper measured a real effect at a
@@ -306,5 +306,5 @@ move on.
 # Definition of done
 
 A reader can see, in one table, how much of a published sensitivity collapse is
-explained by score compression rather than lost discrimination — and can see
+explained by score compression rather than lost discrimination, and can see
 whether this dataset is even able to tell variant effects from gene identity.

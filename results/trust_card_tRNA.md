@@ -2,12 +2,12 @@
 
 How much of this model's ability to separate pathogenic from benign variants depends on the sequence *around* the gene rather than the gene itself?
 
-**Model:** Evo 2 `evo2_1b_base (fp8-delayed)`, 1B parameters. **Variants:** 44 pathogenic (MITOMAP confirmed) and 23 benign (ClinVar, 2+ stars) single-base variants in mitochondrial tRNA genes. **Score:** −ΔL over a 1025 bp window. **Intervals:** 95%, bootstrap over variants.
+Model: Evo 2 `evo2_1b_base (fp8-delayed)`, 1B parameters. Variants: 44 pathogenic (MITOMAP confirmed) and 23 benign (ClinVar, 2+ stars) single-base variants in mitochondrial tRNA genes. Score: −ΔL over a 1025 bp window. Intervals: 95%, bootstrap over variants.
 
 ## Headline
 
 - Native AUROC: **0.824 [0.713, 0.915]** (AUPRC 0.910 [0.847, 0.960], no-skill 0.657).
-- **Pre-declared verdict: gene identity is a substantial part of the native AUROC.** A score that ignores the variant and uses only its gene's pathogenic fraction reaches 0.627 (leave-one-out) to 0.901 (in-sample); only 45 pathogenic–benign pairs share a gene, too few to separate gene identity from variant effect (`scripts/05_gene_confound.py`).
+- Pre-declared verdict: gene identity is a substantial part of the native AUROC. A score that ignores the variant and uses only its gene's pathogenic fraction reaches 0.627 (leave-one-out) to 0.901 (in-sample); only 45 pathogenic–benign pairs share a gene, too few to separate gene identity from variant effect (`scripts/05_gene_confound.py`).
 - Largest context dependence: **Flank shuffle, r = 0 bp**, CDI 0.35 [0.01, 0.63].
 - Controls whose CDI interval excludes zero: Flank shuffle, r = 0 bp.
 - Per-variant scores are context-sensitive: Spearman vs native falls to 0.47, against 0.95 from FP8 rounding alone.
@@ -57,4 +57,4 @@ python scripts/03_flank_sweep.py
 seqcontrol card
 ```
 
-Scored at commits 8332617, 568d02d; data checksums in `data/MANIFEST.md`.
+Scored at commits 568d02d, 8332617; data checksums in `data/MANIFEST.md`.

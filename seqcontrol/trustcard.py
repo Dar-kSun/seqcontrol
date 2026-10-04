@@ -91,11 +91,11 @@ def render_markdown(results: Path, figure: str | None = None) -> str:
         "How much of this model's ability to separate pathogenic from benign variants "
         "depends on the sequence *around* the gene rather than the gene itself?",
         "",
-        f"**Model:** Evo 2 `{base['model']}`, 1B parameters. "
-        f"**Variants:** {n_p} pathogenic (MITOMAP confirmed) and {n_b} benign (ClinVar, "
+        f"Model: Evo 2 `{base['model']}`, 1B parameters. "
+        f"Variants: {n_p} pathogenic (MITOMAP confirmed) and {n_b} benign (ClinVar, "
         f"2+ stars) single-base variants in mitochondrial tRNA genes. "
-        f"**Score:** −ΔL over a {base['window_bp']} bp window. "
-        "**Intervals:** 95%, bootstrap over variants.",
+        f"Score: −ΔL over a {base['window_bp']} bp window. "
+        "Intervals: 95%, bootstrap over variants.",
         "",
         "## Headline",
         "",
@@ -103,7 +103,7 @@ def render_markdown(results: Path, figure: str | None = None) -> str:
         f"no-skill {reg['auprc_no_skill']:.3f}).",
         *(
             [
-                f"- **Pre-declared verdict: {gene['B1']['verdict']}.** A score that ignores "
+                f"- Pre-declared verdict: {gene['B1']['verdict']}. A score that ignores "
                 "the variant and uses only its gene's pathogenic fraction reaches "
                 f"{gene['B1']['gene_prior_auroc_leave_one_variant_out']['value']:.3f} "
                 "(leave-one-out) to "
