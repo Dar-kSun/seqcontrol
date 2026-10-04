@@ -1,0 +1,300 @@
+{
+  "analysis": "B, gene-identity confound (docs/plan-v0.2-threshold-and-gene.md)",
+  "model": "evo2_1b_base (fp8-delayed)",
+  "variants": {
+    "n": 67,
+    "pathogenic": 44,
+    "genes": 20,
+    "per_gene": {
+      "MT-TA": {
+        "1": 1
+      },
+      "MT-TC": {
+        "0": 1
+      },
+      "MT-TE": {
+        "1": 2,
+        "0": 1
+      },
+      "MT-TF": {
+        "1": 2,
+        "0": 1
+      },
+      "MT-TG": {
+        "0": 2
+      },
+      "MT-TH": {
+        "1": 2
+      },
+      "MT-TI": {
+        "1": 1
+      },
+      "MT-TK": {
+        "1": 5,
+        "0": 1
+      },
+      "MT-TL1": {
+        "1": 13
+      },
+      "MT-TL2": {
+        "1": 2,
+        "0": 1
+      },
+      "MT-TM": {
+        "1": 1,
+        "0": 1
+      },
+      "MT-TN": {
+        "1": 3
+      },
+      "MT-TP": {
+        "1": 1
+      },
+      "MT-TQ": {
+        "0": 2
+      },
+      "MT-TR": {
+        "0": 1
+      },
+      "MT-TS1": {
+        "1": 5,
+        "0": 5
+      },
+      "MT-TS2": {
+        "0": 1,
+        "1": 1
+      },
+      "MT-TT": {
+        "0": 5,
+        "1": 1
+      },
+      "MT-TV": {
+        "1": 2
+      },
+      "MT-TW": {
+        "1": 2,
+        "0": 1
+      }
+    }
+  },
+  "native_auroc_gene_cluster_ci": {
+    "value": 0.8241106719367589,
+    "ci95": [
+      0.7240643274853802,
+      0.9180773625239569
+    ],
+    "n_boot": 2000
+  },
+  "B1": {
+    "gene_prior_auroc_leave_one_variant_out": {
+      "value": 0.6274703557312253,
+      "ci95": [
+        0.3062608281358281,
+        0.802056845630215
+      ],
+      "n_boot": 2000
+    },
+    "gene_prior_auroc_in_sample_upper_bound": {
+      "value": 0.900691699604743,
+      "ci95": [
+        0.770340119949495,
+        0.9687711148648648
+      ],
+      "n_boot": 2000
+    },
+    "mean_draws_per_resample": 1.0,
+    "verdict": "gene identity is a substantial part of the native AUROC"
+  },
+  "B2": {
+    "within_gene_pairs": 45,
+    "total_pairs": 1012,
+    "pairs_by_gene": {
+      "MT-TE": 2,
+      "MT-TF": 2,
+      "MT-TK": 5,
+      "MT-TL2": 2,
+      "MT-TM": 1,
+      "MT-TS1": 25,
+      "MT-TS2": 1,
+      "MT-TT": 5,
+      "MT-TW": 2
+    },
+    "within_gene_auroc": {
+      "value": 0.8666666666666667,
+      "ci95": [
+        0.7037037037037037,
+        0.9375473484848482
+      ],
+      "n_boot": 2000
+    },
+    "mean_draws_per_resample": 1.0,
+    "verdict": "fewer than 100 within-gene pairs: this dataset cannot separate gene identity from variant effect"
+  },
+  "B3": {
+    "auroc_change_when_gene_dropped": {
+      "MT-TA": -0.0030793271440390235,
+      "MT-TC": 0.00026949335249726314,
+      "MT-TE": -0.009175607001693953,
+      "MT-TF": 0.008140410314323332,
+      "MT-TG": 0.0005646527385657629,
+      "MT-TH": -0.0042348955392433885,
+      "MT-TI": -0.0030793271440390235,
+      "MT-TK": 0.015050167224080258,
+      "MT-TL1": -0.048514599005482606,
+      "MT-TL2": 0.0038114059853190385,
+      "MT-TM": -0.003814688850078185,
+      "MT-TN": 0.009399402294418158,
+      "MT-TP": -0.004090449489842829,
+      "MT-TQ": -0.0015998494259363838,
+      "MT-TR": 0.0023356090549766506,
+      "MT-TS1": 0.003524655698568746,
+      "MT-TS2": -0.006985936207371979,
+      "MT-TT": 0.03377046501414549,
+      "MT-TV": 0.013363448146056833,
+      "MT-TW": -0.007011104837191806
+    },
+    "range": [
+      -0.048514599005482606,
+      0.03377046501414549
+    ],
+    "most_influential_gene": "MT-TL1",
+    "auroc_without_MT-TL1": {
+      "value": 0.7755960729312763,
+      "ci95": [
+        0.704301270417423,
+        0.8784722222222222
+      ],
+      "n_boot": 2000
+    },
+    "MT-TL1_moves_auroc_by_more_than_0.05": false
+  },
+  "B4_underpowered": {
+    "tRNA swap": {
+      "within_gene_auroc": {
+        "value": 0.8222222222222222,
+        "ci95": [
+          0.5714285714285714,
+          0.9411764705882353
+        ],
+        "n_boot": 2000
+      },
+      "drop_vs_native": {
+        "value": 0.04444444444444451,
+        "ci95": [
+          -0.07142857142857151,
+          0.18181818181818188
+        ],
+        "n_boot": 2000
+      }
+    },
+    "window rotation": {
+      "within_gene_auroc": {
+        "value": 0.8222222222222222,
+        "ci95": [
+          0.7142857142857143,
+          0.9230769230769231
+        ],
+        "n_boot": 2000
+      },
+      "drop_vs_native": {
+        "value": 0.04444444444444451,
+        "ci95": [
+          -0.10000000000000009,
+          0.10526315789473684
+        ],
+        "n_boot": 2000
+      }
+    },
+    "flank shuffle r=0": {
+      "within_gene_auroc": {
+        "value": 0.7555555555555555,
+        "ci95": [
+          0.3333333333333333,
+          0.9069996940024478
+        ],
+        "n_boot": 2000
+      },
+      "drop_vs_native": {
+        "value": 0.11111111111111116,
+        "ci95": [
+          -0.0208559782608696,
+          0.4167763157894731
+        ],
+        "n_boot": 2000
+      }
+    },
+    "flank shuffle r=100": {
+      "within_gene_auroc": {
+        "value": 0.7777777777777778,
+        "ci95": [
+          0.5357142857142857,
+          0.8889492753623185
+        ],
+        "n_boot": 2000
+      },
+      "drop_vs_native": {
+        "value": 0.0888888888888889,
+        "ci95": [
+          -0.0357142857142857,
+          0.25
+        ],
+        "n_boot": 2000
+      }
+    },
+    "flank shuffle r=400": {
+      "within_gene_auroc": {
+        "value": 0.7777777777777778,
+        "ci95": [
+          0.7083333333333334,
+          0.9230769230769231
+        ],
+        "n_boot": 2000
+      },
+      "drop_vs_native": {
+        "value": 0.0888888888888889,
+        "ci95": [
+          -0.10000000000000009,
+          0.14925373134328357
+        ],
+        "n_boot": 2000
+      }
+    }
+  },
+  "B5": {
+    "all benign": {
+      "n_benign": 228,
+      "n_with_allele_frequency": 228,
+      "spearman_dL_vs_af": {
+        "value": 0.10863409417757028,
+        "ci95": [
+          -0.022196404349912435,
+          0.2403106938693417
+        ],
+        "n_boot": 2000
+      },
+      "median_af": 0.0049925,
+      "fraction_af_ge_1pct": 0.32456140350877194
+    },
+    "tRNA benign": {
+      "n_benign": 23,
+      "n_with_allele_frequency": 23,
+      "spearman_dL_vs_af": {
+        "value": -0.24505928853754944,
+        "ci95": [
+          -0.6180670756758578,
+          0.2251709465684438
+        ],
+        "n_boot": 2000
+      },
+      "median_af": 0.002784,
+      "fraction_af_ge_1pct": 0.34782608695652173
+    }
+  },
+  "bootstrap": "2000 cluster resamples over genes (B1-B4), redrawn until usable; B5 over variants; seed 0",
+  "analysis_commit": "c2d7ff1",
+  "run_date": "2026-10-04",
+  "versions": {
+    "python": "3.13.14",
+    "numpy": "2.5.3"
+  }
+}
