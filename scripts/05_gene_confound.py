@@ -29,6 +29,7 @@ import numpy as np
 
 from seqcontrol import config, metrics
 from seqcontrol.data import mitomap
+from seqcontrol.genes import both_classes, fmt, gene_priors, has_pairs
 
 N_BOOT = 2000
 SEED = 0
@@ -44,33 +45,6 @@ def git_commit() -> str:
 def read_csv(name: str) -> list[dict]:
     with open(RES / name, newline="") as f:
         return list(csv.DictReader(f))
-
-
-def gene_priors(y: np.ndarray, groups: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """(leave-one-variant-out, in-sample) pathogenic fraction of each variant's gene."""
-    n_all, p_all = len(y), y.sum()
-    lovo, insample = np.empty(len(y)), np.empty(len(y))
-    for g in np.unique(groups):
-        m = groups == g
-        n, p = m.sum(), y[m].sum()
-        insample[m] = p / n
-        if n > 1:
-            lovo[m] = (p - y[m]) / (n - 1)
-        else:  # alone in its gene: fall back to every other variant
-            lovo[m] = (p_all - y[m]) / (n_all - 1)
-    return lovo, insample
-
-
-def fmt(d: dict, spec: str = ".3f") -> str:
-    return f"{d['value']:{spec}} [{d['ci95'][0]:{spec}}, {d['ci95'][1]:{spec}}]"
-
-
-def both_classes(y):
-    return lambda idx, grp: 0 < y[idx].sum() < len(idx)
-
-
-def has_pairs(y):
-    return lambda idx, grp: metrics.within_group_pairs(y[idx], grp) > 0
 
 
 def verdict_b1(auroc_lovo: float) -> str:
