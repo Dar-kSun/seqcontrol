@@ -7,6 +7,7 @@ How much of this model's ability to separate pathogenic from benign variants dep
 ## Headline
 
 - Native AUROC: **0.824 [0.713, 0.915]** (AUPRC 0.910 [0.847, 0.960], no-skill 0.657).
+- **Pre-declared verdict: gene identity is a substantial part of the native AUROC.** A score that ignores the variant and uses only its gene's pathogenic fraction reaches 0.627 (leave-one-out) to 0.901 (in-sample); only 45 pathogenic–benign pairs share a gene, too few to separate gene identity from variant effect (`scripts/05_gene_confound.py`).
 - Largest context dependence: **Flank shuffle, r = 0 bp**, CDI 0.35 [0.01, 0.63].
 - Controls whose CDI interval excludes zero: Flank shuffle, r = 0 bp.
 - Per-variant scores are context-sensitive: Spearman vs native falls to 0.47, against 0.95 from FP8 rounding alone.
@@ -34,13 +35,13 @@ Sensitivity at a cut-off chosen on native scores (Youden), then held fixed:
 - tRNA swap: 0.82 → 0.56
 - Window rotation: 0.82 → 0.69
 
-Threshold metrics fall further than AUROC because the controls shrink effect sizes for both classes; a fixed cut-off then misses pathogenic variants even where their ranking is mostly intact.
+Threshold metrics fall further than AUROC. Under the tRNA swap, shrinking every native score toward zero (which leaves AUROC unchanged) reproduces 0.697 of the sensitivity drop; the pre-declared verdict is *indeterminate at this sample size* (`scripts/04_threshold_artefact.py`).
 
 ## Read with care
 
 - Small sample: 44 pathogenic and 23 benign. Most intervals are wide.
 - One checkpoint (the smallest Evo 2 model), one window size, one label set. Larger Evo 2 models were not tested.
-- tRNA labels cluster by gene, so part of the native AUROC may reflect telling genes apart rather than variants within a gene.
+- tRNA labels cluster by gene (MT-TL1: 13 pathogenic, 0 benign); every control result inherits the gene-identity caveat above.
 - Benign variants are mostly common polymorphisms; the model may partly score allele familiarity.
 - FP8 runs on an Ada GPU (RTX 4060 Laptop), not the Hopper GPU Evo 2 documents.
 - This card describes model behaviour on a benchmark. It says nothing about clinical use.

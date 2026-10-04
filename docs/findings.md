@@ -3,6 +3,125 @@
 The running results log. Each entry records the date, the model checkpoint, the
 command that produced the number, and the number with its confidence interval.
 
+## 2026-10-04: v0.2 analyses B and A (pre-declared)
+
+Both analyses follow `docs/plan-v0.2-threshold-and-gene.md`, committed before
+either was run (draft in 3f95725, amendments in c45386b; the amendments are
+listed at the top of the plan). Decision rules are applied in code. No GPU:
+both work on the committed per-variant scores. **Model: Evo 2 `evo2_1b_base`
+(1B), shipped FP8 recipe, 67 tRNA variants (44 pathogenic, 23 benign) in 20
+genes. Single scoring run.**
+
+### B: does gene identity explain the native AUROC?
+
+Reproduce: `python scripts/05_gene_confound.py` → `results/gene_confound.*`.
+Intervals here are from 2,000 **cluster-bootstrap resamples over genes**
+(13 MT-TL1 variants are not 13 independent facts), so they are wider than the
+variant-level intervals elsewhere: native AUROC is 0.824 [0.724, 0.918] on
+this basis.
+
+| | AUROC |
+|---|---|
+| Model (−ΔL) | 0.824 [0.724, 0.918] |
+| **B1** Gene prior, leave-one-variant-out (ignores the variant; biased low) | **0.627 [0.306, 0.802]** |
+| **B1** Gene prior, in-sample (uses the variant's own label; biased high) | 0.901 [0.770, 0.969] |
+| **B2** Model, within-gene pairs only (45 pairs) | 0.867 [0.704, 0.938] |
+| **B3** Model, MT-TL1 removed | 0.776 [0.704, 0.878] |
+
+- **B1 verdict (pre-declared, 0.60–0.75 band): gene identity is a substantial
+  part of the native AUROC.** A score that never looks at the variant, only at
+  which tRNA it is in, reaches between 0.627 and 0.901. The model's 0.824 sits
+  inside that range.
+- **B2 verdict: this dataset cannot separate gene identity from variant
+  effect.** Only 45 of the 1,012 pathogenic–benign pairs share a gene, 25 of
+  them in MT-TS1 (fewer than the pre-declared 100). On those 45 the model
+  ranks pathogenic above benign 87% of the time, which is encouraging but
+  descriptive only.
+- **B3:** dropping any one gene changes AUROC by −0.049 to +0.034. MT-TL1
+  (13 pathogenic, 0 benign) is the most influential at −0.0485, just under
+  the pre-declared 0.05 threshold.
+- **B4 (underpowered, as predicted):** scored on within-gene pairs only, every
+  control's AUROC drop has an interval that includes zero (tRNA swap 0.044
+  [−0.071, 0.182]; flank shuffle r = 0: 0.111 [−0.021, 0.417]). No CDI
+  conclusions are drawn from these.
+- **B5 (familiarity):** among all 228 benign variants, ΔL correlates with
+  population allele frequency at Spearman 0.109 [−0.022, 0.240]; among the 23
+  tRNA benign variants, −0.245 [−0.618, 0.225]. No clear familiarity signal,
+  but this is a weak check (median benign allele frequency is 0.5%).
+
+### A: is the published collapse a threshold artefact?
+
+Reproduce: `python scripts/04_threshold_artefact.py` →
+`results/threshold_artefact.*`.
+
+![Threshold artefact](../results/threshold_artefact.png)
+
+**A0.** Multiplying every score by α > 0 leaves AUROC exactly unchanged
+(asserted for 106 values of α) but moves scores across any cut-off fixed in
+absolute units. So a uniform shrinkage of scores toward zero can collapse
+sensitivity with discrimination untouched, by construction.
+
+**A2: how much did the tRNA swap compress scores?** α̂ = 0.772 [0.552, 0.922]
+(median |ΔL| ratio) or 0.744 [0.517, 0.892] (fit through the origin). A pure
+scale change explains only part of what the swap did: R² of the fit is 0.49
+[0.15, 0.71], consistent with per-variant Spearman 0.56. The classes compress
+differently: |ΔL| shrinks to 0.65 of native for pathogenic variants but only
+0.89 for benign. (The plan's "~0.64 and ~0.54" came from medians of signed
+ΔL; benign ΔL straddles zero, so the signed and absolute ratios differ.)
+Differential compression is a change in ranking, not just scale.
+
+**A3: the decomposition**, at the native-Youden cut-off ΔL ≤ −0.0030:
+
+| | Sensitivity | Specificity | AUROC |
+|---|---|---|---|
+| Native | 0.818 | 0.826 | 0.824 |
+| Pure-compression null (native × α̂, either estimate) | 0.636 | 0.870 | 0.824 (identical by construction) |
+| Observed tRNA swap | 0.557 | 0.828 | 0.750 |
+
+- Share of the sensitivity drop that pure compression reproduces:
+  **0.697 [0.23, 1.15]** (same with both α̂ estimates).
+- Residual ranking loss: AUROC drop 0.074 [−0.030, 0.162], not significant.
+- **Verdict (pre-declared rule: ≥ 0.70 and AUROC drop not significant →
+  threshold artefact; < 0.40 → hypothesis wrong; between → indeterminate):
+  indeterminate at this sample size.** The share falls just under 0.70.
+  Sensitivity moves in steps of 1/44 = 0.023, so one more pathogenic variant
+  crossing the cut-off would have given 0.78; the rule is applied as written.
+- **Evidence against pure compression:** the null predicts specificity rises
+  (0.826 → 0.870), because benign scores also move away from the cut-off.
+  Under the real swap specificity stayed at 0.828.
+
+**A4: rank-preserving surrogate** (the swap's score values, assigned in native
+order). At the paper's cut-off the surrogate reproduces the swap's sensitivity
+almost exactly (0.160 vs 0.159). At the native-Youden cut-off it reproduces
+most of the drop (0.592 vs 0.557) but not the specificity (0.895 vs 0.828).
+So the change in the score *distribution* accounts for most of the
+sensitivity loss; reordering accounts for the rest and for specificity
+staying flat.
+
+**A5: simulation of the paper's operating point** (synthetic scores; not the
+paper's data and not a reproduction). Two Gaussians calibrated to the paper's
+native 65.8% sensitivity and 78.5% specificity at a Youden-optimal cut-off
+ΔL ≤ −0.0081, with this repo's pathogenic SD as the free scale. Compressing
+every score by α = 0.42 (0.27–0.59 for half to double the scale) takes
+sensitivity to the paper's 5.1% with AUROC unchanged (0.791). Specificity
+rises, as the paper reports, but to ~100% rather than 93.8%. Pure compression
+is therefore enough to produce a collapse of that size and shape, and
+overshoots the specificity rise, which is consistent with compression plus
+some reordering.
+
+### What A and B mean together
+
+- The repo's headline AUROC is partly a statement about **which tRNA** a
+  variant is in. A variant-blind gene prior gets within reach of the model,
+  and the data cannot tell how much of the model's signal is within-gene.
+- Under the tRNA swap, about 70% of the fixed-threshold sensitivity loss is
+  what pure score compression produces, but this falls just short of the
+  pre-declared bar, compression alone does not explain specificity staying
+  flat, and pathogenic scores shrink more than benign ones. The honest summary
+  is that compression is a large part of the mechanism, not all of it.
+- None of this says the source paper is wrong. It measured a real effect at a
+  real operating point; this shows one mechanism that produces its pattern.
+
 ## 2026-10-04: wider windows (4,097 bp)
 
 **Model: Evo 2 `evo2_1b_base` (1B). Single run per configuration.** The

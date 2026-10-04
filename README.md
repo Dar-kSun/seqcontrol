@@ -4,12 +4,17 @@ Control experiments for genomic language models: how much of a DNA model's
 variant-effect score comes from the gene it is supposed to be reading, and how
 much from the sequence around it?
 
-**Headline.** On 67 mitochondrial tRNA variants, scrambling everything around
-the gene (keeping the gene and the context's base composition intact) lowers
-Evo 2 1B's AUROC from **0.824 to 0.710**: a context-dependence index of
-**0.35 [0.01, 0.63]**. About a third of its above-chance discrimination depends
-on context, but most of it survives. Individual variant scores move much more
-than the ranking does (Spearman 0.47 against native).
+**Headline.** On 67 mitochondrial tRNA variants, Evo 2 1B separates
+pathogenic from benign with AUROC **0.824**, but a substantial part of that is
+*which tRNA* a variant sits in. A score that ignores the variant entirely and
+uses only its gene's pathogenic fraction reaches **0.627** (leave-one-out,
+biased low) to **0.901** (in-sample, biased high), and only 45 pathogenic–benign
+pairs share a gene, too few to separate gene identity from variant effect.
+
+With that caveat: scrambling everything around the gene (keeping the gene and
+the context's base composition intact) lowers AUROC to **0.710**, a
+context-dependence index of **0.35 [0.01, 0.63]**. Individual variant scores
+move much more than the ranking does (Spearman 0.47 against native).
 
 All numbers are for **Evo 2 `evo2_1b_base` (1B parameters)**, the smallest
 Evo 2 checkpoint, run on one laptop GPU. Larger Evo 2 models were not tested.
@@ -109,15 +114,53 @@ What the results say:
    that excludes zero, and only just.
 2. **The context that matters is local.** Score stability recovers steadily as
    more real flank is kept, reaching 0.93 at 400 bp.
-3. **Threshold metrics exaggerate the effect.** Under the tRNA swap, effect
-   sizes shrink for both classes, so sensitivity at a cut-off fixed on native
-   scores falls from 0.82 to 0.56 while specificity is unchanged. The source
-   benchmark reports its collapse (65.8% to 5.1%) as sensitivity at a fixed
-   threshold; this repo reproduces the direction of that drop but not its size.
+3. **Threshold metrics exaggerate the effect.** Under the tRNA swap,
+   sensitivity at a cut-off fixed on native scores falls from 0.82 to 0.56
+   while AUROC falls only from 0.824 to 0.750. The source benchmark reports its
+   collapse (65.8% to 5.1%) as sensitivity at a fixed threshold; this repo
+   reproduces the direction of that drop but not its size. A pre-declared
+   decomposition (below) finds that score compression is a large part of the
+   mechanism but not all of it.
 4. **Robust to the FP8 rounding recipe.** All three controls were re-run with a
    different FP8 scaling recipe. The CDIs for the tRNA swap, window rotation and
    full scramble change by at most 0.02; at intermediate shuffle radii by up to
    0.06, well inside their intervals.
+
+### Gene identity and the threshold artefact (pre-declared analyses)
+
+Both were specified in
+[`docs/plan-v0.2-threshold-and-gene.md`](docs/plan-v0.2-threshold-and-gene.md)
+and committed before being run; the decision rules are applied in code
+(`scripts/05_gene_confound.py`, `scripts/04_threshold_artefact.py`).
+
+**Gene identity.** With confidence intervals from resampling whole genes:
+
+| Score | AUROC on tRNA variants |
+|---|---|
+| Evo 2 1B (−ΔL) | 0.824 [0.724, 0.918] |
+| Gene prior, ignoring the variant (leave-one-out, biased low) | 0.627 [0.306, 0.802] |
+| Gene prior, ignoring the variant (in-sample, biased high) | 0.901 [0.770, 0.969] |
+| Evo 2 1B, within-gene pairs only (45 pairs, descriptive) | 0.867 [0.704, 0.938] |
+
+Pre-declared verdicts: gene identity is a **substantial** part of the native
+AUROC, and this dataset **cannot separate** gene identity from variant effect.
+
+**Threshold artefact.** Shrinking every score toward zero leaves AUROC exactly
+unchanged but drags scores across a fixed cut-off. At the native cut-off
+(ΔL ≤ −0.0030):
+
+| | Sensitivity | Specificity | AUROC |
+|---|---|---|---|
+| Native | 0.818 | 0.826 | 0.824 |
+| Pure compression (native scores × 0.77) | 0.636 | 0.870 | 0.824 |
+| Observed tRNA swap | 0.557 | 0.828 | 0.750 |
+
+Pure compression reproduces **0.697 [0.23, 1.15]** of the sensitivity drop,
+just under the pre-declared 0.70 bar, so the verdict is **indeterminate**.
+Compression also predicts specificity should rise, and under the swap it did
+not. A simulation of the paper's operating point (synthetic scores, not the
+paper's data) shows that compression alone can turn 65.8% sensitivity into
+5.1% with AUROC unchanged.
 
 The full log, including what was checked and what went wrong, is in
 [`docs/findings.md`](docs/findings.md).
@@ -132,11 +175,14 @@ The full log, including what was checked and what went wrong, is in
   intervals are wide and include zero; a null result here is not evidence of no
   effect.
 - **Labels cluster by gene.** MT-TL1 alone has 13 pathogenic and no benign
-  variants, so part of the native AUROC may be the model telling genes apart
-  rather than reading variants within them. This was not separated out.
+  variants. A variant-blind gene prior scores AUROC 0.627–0.901 against the
+  model's 0.824, and with only 45 within-gene pairs this dataset cannot say how
+  much of the model's signal is within-gene. Every control result above
+  inherits this limitation.
 - **Benign variants are mostly common.** ClinVar-benign mtDNA variants are
-  largely population polymorphisms; the model may partly score how familiar an
-  allele is from training data.
+  largely population polymorphisms, so the model could partly be scoring
+  familiarity. A weak check finds no clear sign of it: among benign variants,
+  ΔL correlates with allele frequency at Spearman 0.109 [−0.022, 0.240].
 - **The controls can mislead too.** The tRNA swap also changes strand context
   (genes keep reference orientation) and which tRNAs sit next to each other.
   Window rotation adds an artificial junction. Flank shuffling keeps
@@ -156,10 +202,12 @@ The full log, including what was checked and what went wrong, is in
 
 ## Status
 
-**v0.1.** Done: data loaders, Evo 2 adapter, baseline, the three controls, the
-trust card and the CLI (milestones M0–M7 in `CLAUDE.md`). Not yet implemented:
-the synonymous-variant control, the genetic-code check, a second model, and
-nuclear (ClinVar) variants.
+**v0.2, in progress.** Done: data loaders, Evo 2 adapter, baseline, the three
+controls, the trust card and the CLI (v0.1, milestones M0–M7 in `CLAUDE.md`),
+plus the pre-declared gene-confound and threshold-artefact analyses. Not yet
+implemented: the synonymous-variant control, the genetic-code check, a second
+model, and nuclear (ClinVar) variants. A dataset with more within-gene
+pathogenic–benign pairs is the most important next step.
 
 ## Citations
 

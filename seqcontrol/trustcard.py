@@ -82,6 +82,8 @@ def render_markdown(results: Path, figure: str | None = None) -> str:
     significant = [r.name for r in rows if r.cdi["ci95"][0] > 0]
     commits = sorted({base.get("git_commit", "?"), swap["scored_at_commit"]})
     largest = max(rows, key=lambda r: r.cdi["value"])
+    gene = _load(results, "gene_confound")
+    art = _load(results, "threshold_artefact")
 
     lines = [
         f"# Trust card: {REGION_NAMES[region]} variants · `{base['model']}`",
@@ -99,6 +101,20 @@ def render_markdown(results: Path, figure: str | None = None) -> str:
         "",
         f"- Native AUROC: **{_ci(reg['auroc'])}** (AUPRC {_ci(reg['auprc'])}, "
         f"no-skill {reg['auprc_no_skill']:.3f}).",
+        *(
+            [
+                f"- **Pre-declared verdict: {gene['B1']['verdict']}.** A score that ignores "
+                "the variant and uses only its gene's pathogenic fraction reaches "
+                f"{gene['B1']['gene_prior_auroc_leave_one_variant_out']['value']:.3f} "
+                "(leave-one-out) to "
+                f"{gene['B1']['gene_prior_auroc_in_sample_upper_bound']['value']:.3f} "
+                f"(in-sample); only {gene['B2']['within_gene_pairs']} pathogenic–benign pairs "
+                "share a gene, too few to separate gene identity from variant effect "
+                "(`scripts/05_gene_confound.py`)."
+            ]
+            if gene
+            else []
+        ),
         f"- Largest context dependence: **{largest.name}**, CDI {_ci(largest.cdi, '.2f')}.",
         "- Controls whose CDI interval excludes zero: "
         + (", ".join(significant) if significant else "none")
@@ -137,17 +153,25 @@ def render_markdown(results: Path, figure: str | None = None) -> str:
             lines.append(f"- {r.name}: {a:.2f} → {b:.2f}")
     lines += [
         "",
-        "Threshold metrics fall further than AUROC because the controls shrink effect "
-        "sizes for both classes; a fixed cut-off then misses pathogenic variants even "
-        "where their ranking is mostly intact.",
+        (
+            "Threshold metrics fall further than AUROC. Under the tRNA swap, shrinking every "
+            "native score toward zero (which leaves AUROC unchanged) reproduces "
+            f"{art['A3']['nulls']['median_ratio']['share_of_sensitivity_drop_explained']['value']:.3f}"
+            " of the sensitivity drop; the pre-declared verdict is "
+            f"*{art['A3']['verdict']}* (`scripts/04_threshold_artefact.py`)."
+            if art
+            else "Threshold metrics fall further than AUROC because the controls shrink "
+            "effect sizes; a fixed cut-off then misses pathogenic variants even where "
+            "their ranking is mostly intact."
+        ),
         "",
         "## Read with care",
         "",
         f"- Small sample: {n_p} pathogenic and {n_b} benign. Most intervals are wide.",
         "- One checkpoint (the smallest Evo 2 model), one window size, one label set. "
         "Larger Evo 2 models were not tested.",
-        "- tRNA labels cluster by gene, so part of the native AUROC may reflect telling "
-        "genes apart rather than variants within a gene.",
+        "- tRNA labels cluster by gene (MT-TL1: 13 pathogenic, 0 benign); every control "
+        "result inherits the gene-identity caveat above.",
         "- Benign variants are mostly common polymorphisms; the model may partly score "
         "allele familiarity.",
         "- FP8 runs on an Ada GPU (RTX 4060 Laptop), not the Hopper GPU Evo 2 documents.",
