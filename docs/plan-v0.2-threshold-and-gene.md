@@ -1,9 +1,31 @@
 # Plan v0.2 — pre-declared: the threshold artefact, and the gene-identity confound
 
 **Status: pre-declared. Written before any of these numbers were computed.**
-Commit this file *before* running anything in it, as `docs/plan-v0.2-*.md` was
-done for the earlier milestones. Pre-declaring the analyses and the decision
-rules is what stops this turning into a search for a flattering result.
+Commit this file *before* running anything in it. Pre-declaring the analyses
+and the decision rules is what stops this turning into a search for a
+flattering result.
+
+**Amendments made before the first commit (2026-10-04).** The draft was
+reviewed and these changes made before anything in it was run:
+
+1. B1 redefined: the leave-one-*gene*-out prior in the draft gives every
+   variant the same score (AUROC 0.5 by construction). Replaced by
+   leave-one-*variant*-out, reported with the in-sample prior as an upper bound.
+   B1 interpretation now also covers the 0.6–0.8 range.
+2. The noise-floor sentence in the background was inverted; corrected.
+3. Removed a claim that earlier milestones committed plan files (they did not;
+   this is the first).
+4. `run.json` replaced by the existing convention: provenance fields inside
+   each results JSON, now including package versions.
+5. **Known before commit, from labels and gene membership only (no model
+   scores):** the 67 tRNA variants sit in 20 genes, 9 of which have both
+   classes; there are **45 within-gene pathogenic–benign pairs** (of 1,012),
+   25 of them in MT-TS1. B2 and B4 were amended to say what happens below the
+   100-pair threshold.
+6. Cluster-bootstrap rule for resamples that lack a class (statistical rules).
+7. A5: the paper's native specificity filled in (78.5%, i.e. 21.5% false
+   positives). A3: per-class compression ratios reported alongside the single α.
+8. B5: allele-frequency source named.
 
 Two analyses. **A** explains the published collapse. **B** tests whether this
 repo's own headline number survives its biggest confound. B can invalidate A's
@@ -24,7 +46,8 @@ From `docs/findings.md`:
   (ΔL ≤ −0.0081) with **specificity rising to 93.8%**. It reports no AUROC
   after permutation.
 - Noise floor: changing only the FP8 rounding recipe gives per-variant
-  Spearman ≈ 0.95. Nothing below that is a real effect.
+  Spearman ≈ 0.95. Agreement at or above that is indistinguishable from
+  rounding noise; agreement below it is a real change in the scores.
 
 **The hypothesis both analyses serve:** the published collapse is largely a
 *threshold artefact*. Moving a gene compresses every score toward zero, so
@@ -78,6 +101,11 @@ and report both:
 2. **Regression through the origin:** fit `ΔL_swap ≈ α·ΔL_native`, report α̂ with
    a bootstrap CI and the R² of that fit.
 
+Also report the class-wise ratios (pathogenic and benign separately; from
+`docs/findings.md`, medians suggest ~0.64 and ~0.54). They are descriptive only:
+the null in A3 must use a single α, because scaling the classes differently is
+not a monotone transform and would change the ranking.
+
 The R² is important and must be reported prominently: it says how well a
 *pure scale change* describes what the swap did. Per-variant Spearman under the
 swap is 0.56, well below the 0.95 noise floor, so a pure-scale model is known to
@@ -129,8 +157,9 @@ paper's cut-off is 22.7%, not 65.8%. The operating points differ.
 So do this as an explicitly-labelled **illustration, not a reproduction**:
 
 1. Construct two Gaussian score distributions calibrated so that at the
-   Youden-optimal cut-off, sensitivity = 65.8% and specificity matches the
-   paper's reported native value.
+   Youden-optimal cut-off, sensitivity = 65.8% and specificity = 78.5% (the
+   paper's reported native values: 52/79 pathogenic called, 21.5% false
+   positives among benign).
 2. Apply compression α and recompute sensitivity and specificity at the
    **fixed** cut-off.
 3. Report the α that lands at 5.1% sensitivity, and confirm specificity *rises*
@@ -162,15 +191,30 @@ New script: `scripts/05_gene_confound.py`.
 ## B1. The gene-prior baseline (do this first — it's one function)
 
 A "model" that ignores the variant entirely and scores each variant by its
-gene's pathogenic fraction in this dataset. Evaluate with **leave-one-gene-out**
-(a gene's own variants never inform its own prior).
+gene's pathogenic fraction in this dataset. Two versions, both reported:
 
-This single number reframes everything:
+- **Leave-one-variant-out (primary):** each variant is scored by the
+  pathogenic fraction among the *other* variants in its gene. A variant alone
+  in its gene gets the overall pathogenic fraction of all other variants. This
+  version is biased *low*: removing a variant pushes its gene's fraction away
+  from its own label (in a 1 P / 1 B gene, each gets the other's label).
+- **In-sample (upper bound):** each variant scored by its gene's fraction
+  including itself. Biased *high*, because a variant's own label informs its
+  score.
 
-- Gene-prior AUROC **≈ 0.80** → native 0.824 is largely gene identity. Say so
+The truth lies between the two. (A leave-one-*gene*-out prior, as first
+drafted, is undefined: with a gene's own variants removed nothing about that
+gene remains, every variant gets the same score, and AUROC is 0.5 by
+construction.)
+
+Interpretation, applied to the primary (leave-one-variant-out) number:
+
+- Gene-prior AUROC **≥ 0.75** → native 0.824 is largely gene identity. Say so
   prominently, in the README, not only here.
-- Gene-prior AUROC **≈ 0.5–0.6** → gene identity is a minor part, and the
-  headline stands as a statement about variants.
+- **0.60–0.75** → gene identity is a substantial part of the native AUROC.
+  Say so in the README headline, with both numbers.
+- **≤ 0.60** → gene identity is a minor part, and the headline stands as a
+  statement about variants.
 
 ## B2. Within-gene (stratified) AUROC
 
@@ -184,6 +228,11 @@ construction.
   identity from variant effect*, and that is a legitimate, publishable-shaped
   finding about the benchmark — not a failure.
 - CIs by **cluster bootstrap over genes**, not over variants.
+- **Known before commit:** there are 45 usable pairs (amendment 5), below the
+  100-pair threshold. So the pre-declared conclusion is already that *this
+  dataset cannot separate gene identity from variant effect*. B2 is still
+  computed and reported, with its CI, as a descriptive number, and flagged as
+  dominated by MT-TS1 (25 of the 45 pairs).
 
 ## B3. Leave-one-gene-out sensitivity
 
@@ -194,7 +243,9 @@ and name the most influential gene. If dropping MT-TL1 moves AUROC by more than
 ## B4. Re-run the controls under the gene-robust metric
 
 Recompute the swap, rotation and flank-shuffle results using the within-gene
-AUROC from B2 (if B2 has enough pairs). State whether the CDI conclusions hold.
+AUROC from B2. With 45 pairs this is underpowered (amendment 5), so report the
+numbers with their CIs and label them as such; do not draw CDI conclusions from
+them.
 
 ## B5. The familiarity confound — scope it, don't solve it
 
@@ -202,9 +253,11 @@ Most benign mtDNA variants here are common population polymorphisms, so the
 model may be scoring *how familiar this spelling looks* rather than functional
 effect.
 
-Cheap partial check: if allele frequency is available for the benign set,
-report the correlation between ΔL and allele frequency within benign variants
-alone. A strong correlation means part of the signal is familiarity.
+Cheap partial check: report the Spearman correlation between ΔL and allele
+frequency within benign variants alone. Allele frequency comes from MITOMAP's
+polymorphism table (GenBank frequency across ~66,800 full-length sequences),
+which sits behind the same Cloudflare challenge as the disease table; pin it in
+`data/MANIFEST.md` like the other sources. A strong correlation means part of the signal is familiarity.
 
 **Do not attempt to fully resolve this.** Measure it, state it as a limitation,
 move on.
@@ -216,10 +269,14 @@ move on.
 - **Bootstrap over genes, not variants**, anywhere gene clustering is in play
   (B2, B3, B4). Variant-level bootstrapping treats 13 MT-TL1 variants as 13
   independent facts, which is the exact error this analysis exists to catch.
+- A gene-level resample that contains no within-gene pair (B2) or lacks one
+  class (B3) is redrawn. Report how many draws were needed per accepted
+  resample, since frequent redraws mean the interval is conditional on an
+  unusual subset.
 - 2,000 resamples, paired against native, matching the existing convention.
 - Every reported difference carries a CI. No bare point estimates.
-- Fix seeds; record commit, seed and package versions in `run.json` as the
-  existing scripts do.
+- Fix seeds; record commit, seed and package versions in each results JSON,
+  as the existing scripts record commit and date.
 
 # Deliverables
 
