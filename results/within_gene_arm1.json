@@ -1,0 +1,84 @@
+{
+  "n_variants": 241,
+  "n_pathogenic": 48,
+  "n_genes": 13,
+  "within_gene_pairs": 893,
+  "pairs_by_gene": {
+    "MT-ATP6": 225,
+    "MT-ATP8": 8,
+    "MT-CO1": 60,
+    "MT-CO2": 16,
+    "MT-CO3": 7,
+    "MT-CYB": 48,
+    "MT-ND1": 264,
+    "MT-ND2": 10,
+    "MT-ND3": 32,
+    "MT-ND4": 12,
+    "MT-ND4L": 3,
+    "MT-ND5": 138,
+    "MT-ND6": 70
+  },
+  "auroc_whole_set": {
+    "value": 0.9137521588946459,
+    "ci95": [
+      0.8526683175208071,
+      0.9649429547355701
+    ],
+    "n_boot": 2000
+  },
+  "gene_prior_auroc_leave_one_variant_out": {
+    "value": 0.542206390328152,
+    "ci95": [
+      0.27900462737160414,
+      0.6288671777328212
+    ],
+    "n_boot": 2000
+  },
+  "gene_prior_auroc_in_sample_upper_bound": {
+    "value": 0.6973769430051814,
+    "ci95": [
+      0.5980112189325735,
+      0.7591430176792018
+    ],
+    "n_boot": 2000
+  },
+  "within_gene_auroc": {
+    "value": 0.9339305711086227,
+    "ci95": [
+      0.8466365569158063,
+      0.9776953999171155
+    ],
+    "n_boot": 2000
+  },
+  "within_gene_auroc_change_when_gene_dropped": {
+    "MT-ATP6": -0.010277876497844174,
+    "MT-ATP8": -0.0005972377752893054,
+    "MT-CO1": 0.01805022120830413,
+    "MT-CO2": -0.0012053715647230012,
+    "MT-CO3": -0.0005219932305188246,
+    "MT-CYB": -0.003753056315723202,
+    "MT-ND1": -0.0022930512358086963,
+    "MT-ND2": -0.0007482381527902371,
+    "MT-ND3": 0.013804620529007994,
+    "MT-ND4": 0.000235149663227463,
+    "MT-ND4L": -0.00022270594008333422,
+    "MT-ND5": -0.012076266472861086,
+    "MT-ND6": -0.004404447171806103
+  },
+  "mean_draws_per_resample": {
+    "both_classes": 1.0,
+    "within_gene_pairs": 1.0
+  },
+  "verdict": "the model separates pathogenic from benign variants within the same protein-coding gene",
+  "plan": "docs/plan-v0.3-within-gene.md",
+  "arm": 1,
+  "description": "protein-coding variants, strict labels",
+  "model": "evo2_1b_base (fp8-delayed)",
+  "bootstrap": "2000 cluster resamples over genes, redrawn until usable; seed 0",
+  "analysis_commit": "6d387e4",
+  "run_date": "2026-10-04",
+  "versions": {
+    "python": "3.13.14",
+    "numpy": "2.5.3"
+  }
+}
