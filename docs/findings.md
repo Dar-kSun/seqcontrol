@@ -4,6 +4,62 @@ A running log of results, newest first. Each entry gives the date, the model
 checkpoint, the command that produced the numbers, and the numbers with their
 confidence intervals.
 
+## 2026-10-04: v0.3 Arm 2, context within tRNA genes (widened labels)
+
+Pre-declared in `docs/plan-v0.3-within-gene.md`, committed (96cb968) before
+anything was run. Model: Evo 2 `evo2_1b_base` (1B), shipped FP8 recipe,
+1,025 bp windows. This is a sensitivity analysis: benign labels are widened
+to ClinVar 1+ star (adding single-submitter calls), which makes them noisier,
+and it does not replace the strict-label results.
+
+Scoring ran on the GPU with `bash scripts/run_v03_expanded.sh` (baseline,
+tRNA swap, and flank shuffle at r = 0, 100 and 400 bp with 10 seeds; about
+three hours). The flank shuffle failed once and succeeded on its automatic
+retry; the first attempt's error message was lost because both attempts wrote
+to the same log, which the queue scripts now avoid. Analysis:
+`python scripts/06_within_gene.py --arm 2`. Intervals come from 2,000
+cluster-bootstrap resamples over genes.
+
+There are 355 tRNA variants (44 pathogenic, 311 benign) in
+22 genes, giving 544 within-gene pairs (against 45 with strict labels).
+On the whole widened set, all mtDNA regions together, AUROC is
+0.821 [0.773, 0.865]; for tRNA alone it is 0.743 [0.660, 0.817]
+(variant-level intervals), lower than the strict set's 0.824, as you'd expect
+with many more and noisier benign labels.
+
+| Score | AUROC |
+|---|---|
+| Model, whole tRNA set | 0.743 [0.650, 0.825] |
+| Gene prior, leave-one-variant-out (ignores the variant) | 0.693 [0.436, 0.790] |
+| Gene prior, in-sample (upper bound) | 0.834 [0.728, 0.889] |
+| Model, within-gene pairs only | **0.789 [0.698, 0.865]** |
+
+Dropping any one gene changes the within-gene AUROC by
+-0.040 to +0.028.
+
+The within-gene AUROC's lower bound is above 0.5, so with these labels the
+model does separate pathogenic from benign variants inside tRNA genes, and the
+plan's context rules apply. Under each control:
+
+| Control | Whole-set AUROC | Within-gene AUROC | Within-gene CDI | Verdict |
+|---|---|---|---|---|
+| tRNA swap | 0.731 | 0.750 [0.626, 0.848] | 0.13 [-0.11, 0.43] | indeterminate at this sample size |
+| flank shuffle r=0 | 0.703 | 0.757 [0.611, 0.880] | 0.11 [-0.18, 0.53] | indeterminate at this sample size |
+| flank shuffle r=100 | 0.701 | 0.733 [0.601, 0.842] | 0.19 [0.01, 0.54] | descriptive (no pre-declared rule) |
+| flank shuffle r=400 | 0.723 | 0.767 [0.685, 0.829] | 0.08 [-0.09, 0.23] | descriptive (no pre-declared rule) |
+
+Only the tRNA swap and the r = 0 shuffle have pre-declared rules, and both come
+out indeterminate: the point estimates are modest (0.13 and 0.11) but the
+intervals run from below zero to around a half. The r = 100 interval just
+excludes zero, which is odd next to r = 0, where more context is scrambled;
+with no rule set in advance and intervals this wide, it shouldn't be read as
+an effect. In none of the 2,000 resamples, for any control, did the native
+within-gene AUROC fall to 0.5 or below, so the CDI was always defined.
+
+What this adds: with labels wide enough to compare variants within the same
+tRNA, the model's signal is not only gene identity. How much of that
+within-gene signal depends on context can't be pinned down at this size.
+
 ## 2026-10-04: v0.3 Arm 1, within-gene discrimination on protein-coding variants
 
 Pre-declared in `docs/plan-v0.3-within-gene.md`, which was committed (96cb968)

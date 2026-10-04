@@ -1,0 +1,189 @@
+{
+  "n_variants": 355,
+  "n_pathogenic": 44,
+  "n_genes": 22,
+  "within_gene_pairs": 544,
+  "pairs_by_gene": {
+    "MT-TA": 12,
+    "MT-TE": 22,
+    "MT-TF": 38,
+    "MT-TH": 36,
+    "MT-TI": 7,
+    "MT-TK": 80,
+    "MT-TL1": 130,
+    "MT-TL2": 20,
+    "MT-TM": 7,
+    "MT-TN": 27,
+    "MT-TP": 8,
+    "MT-TS1": 50,
+    "MT-TS2": 12,
+    "MT-TT": 43,
+    "MT-TV": 18,
+    "MT-TW": 34
+  },
+  "auroc_whole_set": {
+    "value": 0.7425460391698334,
+    "ci95": [
+      0.6500661438110292,
+      0.8249322779463784
+    ],
+    "n_boot": 2000
+  },
+  "gene_prior_auroc_leave_one_variant_out": {
+    "value": 0.6928895059923998,
+    "ci95": [
+      0.4361681031113196,
+      0.7904567556856289
+    ],
+    "n_boot": 2000
+  },
+  "gene_prior_auroc_in_sample_upper_bound": {
+    "value": 0.8338205203156972,
+    "ci95": [
+      0.7277723073252823,
+      0.888930566972473
+    ],
+    "n_boot": 2000
+  },
+  "within_gene_auroc": {
+    "value": 0.7886029411764706,
+    "ci95": [
+      0.697787044526175,
+      0.8647077321494636
+    ],
+    "n_boot": 2000
+  },
+  "within_gene_auroc_change_when_gene_dropped": {
+    "MT-TA": -0.0028886554621848637,
+    "MT-TC": 0.0,
+    "MT-TD": 0.0,
+    "MT-TE": -0.0012466193373901202,
+    "MT-TF": 0.017721169495466205,
+    "MT-TG": 0.0,
+    "MT-TH": 0.008641153311718441,
+    "MT-TI": -0.002755641362690353,
+    "MT-TK": 0.028207403651115626,
+    "MT-TL1": -0.0398106706450696,
+    "MT-TL2": 0.003381791647956933,
+    "MT-TM": 0.0009687534231570538,
+    "MT-TN": 0.0005653373535100537,
+    "MT-TP": -0.00128950834064967,
+    "MT-TQ": 0.0,
+    "MT-TR": 0.0,
+    "MT-TS1": -0.005202131459871362,
+    "MT-TS2": -0.004768354710305123,
+    "MT-TT": -0.008163819419983565,
+    "MT-TV": 0.006073864907179649,
+    "MT-TW": -0.0042892156862744946,
+    "MT-TY": 0.0
+  },
+  "mean_draws_per_resample": {
+    "both_classes": 1.0,
+    "within_gene_pairs": 1.0
+  },
+  "controls": {
+    "tRNA swap": {
+      "within_gene_auroc_control": {
+        "value": 0.75,
+        "ci95": [
+          0.6257114503544625,
+          0.8476201249730662
+        ],
+        "n_boot": 2000
+      },
+      "within_gene_cdi": {
+        "value": 0.1337579617834394,
+        "ci95": [
+          -0.10531614270575765,
+          0.4331385818658672
+        ],
+        "n_boot": 2000,
+        "resamples_cdi_undefined": 0
+      },
+      "mean_draws_per_resample": 1.0,
+      "auroc_whole_set_control": 0.7306343174510377,
+      "cdi_whole_set": 0.049111178065682666,
+      "verdict": "indeterminate at this sample size"
+    },
+    "flank shuffle r=0": {
+      "within_gene_auroc_control": {
+        "value": 0.7573529411764706,
+        "ci95": [
+          0.6110065013451058,
+          0.8798216568862078
+        ],
+        "n_boot": 2000
+      },
+      "within_gene_cdi": {
+        "value": 0.10828025477707007,
+        "ci95": [
+          -0.18181818181818152,
+          0.5268660837551769
+        ],
+        "n_boot": 2000,
+        "resamples_cdi_undefined": 0
+      },
+      "mean_draws_per_resample": 1.0,
+      "auroc_whole_set_control": 0.7032300496930722,
+      "cdi_whole_set": 0.16209701717384753,
+      "verdict": "indeterminate at this sample size"
+    },
+    "flank shuffle r=100": {
+      "within_gene_auroc_control": {
+        "value": 0.7334558823529411,
+        "ci95": [
+          0.6009725685785536,
+          0.841691635734836
+        ],
+        "n_boot": 2000
+      },
+      "within_gene_cdi": {
+        "value": 0.1910828025477708,
+        "ci95": [
+          0.007193422519509618,
+          0.5375107758620687
+        ],
+        "n_boot": 2000,
+        "resamples_cdi_undefined": 0
+      },
+      "mean_draws_per_resample": 1.0,
+      "auroc_whole_set_control": 0.7013300204618532,
+      "cdi_whole_set": 0.1699307020186806,
+      "verdict": "descriptive (no pre-declared rule)"
+    },
+    "flank shuffle r=400": {
+      "within_gene_auroc_control": {
+        "value": 0.7665441176470589,
+        "ci95": [
+          0.6848471986417657,
+          0.8290964921690624
+        ],
+        "n_boot": 2000
+      },
+      "within_gene_cdi": {
+        "value": 0.07643312101910801,
+        "ci95": [
+          -0.0943734765730791,
+          0.23440734474522273
+        ],
+        "n_boot": 2000,
+        "resamples_cdi_undefined": 0
+      },
+      "mean_draws_per_resample": 1.0,
+      "auroc_whole_set_control": 0.7231803566208711,
+      "cdi_whole_set": 0.07984332630310342,
+      "verdict": "descriptive (no pre-declared rule)"
+    }
+  },
+  "plan": "docs/plan-v0.3-within-gene.md",
+  "arm": 2,
+  "description": "tRNA variants, widened labels (ClinVar benign 1+ star)",
+  "model": "evo2_1b_base (fp8-delayed)",
+  "bootstrap": "2000 cluster resamples over genes, redrawn until usable; seed 0",
+  "analysis_commit": "66e21da",
+  "run_date": "2026-10-04",
+  "versions": {
+    "python": "3.13.14",
+    "numpy": "2.5.3"
+  }
+}

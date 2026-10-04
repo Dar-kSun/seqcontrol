@@ -12,6 +12,12 @@ often variants in its gene are pathogenic, reaches between 0.627
 pathogenic–benign pairs share a gene, which is too few to pull gene identity
 apart from the effect of the variant itself.
 
+Where there are enough pairs, the model does read the variant. On
+protein-coding variants (893 within-gene pairs) it ranks pathogenic above
+benign within the same gene with an AUROC of 0.934 [0.847, 0.978]. With a
+wider, noisier set of tRNA benign labels (544 pairs) it does the same inside
+tRNA genes, at 0.789 [0.698, 0.865].
+
 With that caveat in mind: scrambling everything around the gene, while keeping
 the gene and the base composition of its surroundings, lowers the AUROC to
 0.710. That is a context-dependence index of 0.35 [0.01, 0.63]. Individual
@@ -199,6 +205,27 @@ it didn't. A simulation of the paper's operating point (synthetic scores, not
 the paper's data) shows that compression on its own is enough to turn 65.8%
 sensitivity into 5.1% without moving the AUROC.
 
+### Within genes (pre-declared, v0.3)
+
+A second plan,
+[`docs/plan-v0.3-within-gene.md`](docs/plan-v0.3-within-gene.md), also
+committed before running, looked for variant sets with enough within-gene
+pairs (`scripts/06_within_gene.py`; intervals from resampling whole genes).
+
+| Variant set | Within-gene pairs | Gene prior (leave-one-out to in-sample) | Model, within genes |
+|---|---|---|---|
+| Protein-coding, strict labels | 893 | 0.542 to 0.697 | 0.934 [0.847, 0.978] |
+| tRNA, benign widened to ClinVar 1+ star | 544 | 0.693 to 0.834 | 0.789 [0.698, 0.865] |
+
+On protein-coding variants the plan's verdict is that the model separates
+pathogenic from benign variants within the same gene, and a gene-only score
+gets nowhere near it. The widened tRNA labels are noisier and are a
+sensitivity analysis, not the headline. With them, the within-gene
+context-dependence index under the tRNA swap is 0.13 [−0.11, 0.43] and under
+the full scramble 0.11 [−0.18, 0.53]; both verdicts are indeterminate. So the
+within-gene tRNA signal exists, but how much of it depends on context can't be
+pinned down at this size.
+
 Everything else, including what was checked along the way and what went wrong,
 is in [`docs/findings.md`](docs/findings.md).
 
@@ -213,9 +240,11 @@ is in [`docs/findings.md`](docs/findings.md).
   evidence that there is no effect.
 - **Labels cluster by gene.** MT-TL1 alone has 13 pathogenic variants and no
   benign ones. A gene prior that ignores the variant scores AUROC 0.627–0.901
-  against the model's 0.824, and with only 45 within-gene pairs this dataset
-  can't say how much of the model's signal comes from within genes. Every
-  control result above carries this caveat.
+  against the model's 0.824, and with only 45 within-gene pairs the strict
+  tRNA set can't say how much of the model's signal comes from within genes.
+  Every strict-label control result carries this caveat. Wider labels and the
+  protein-coding variants show within-gene signal, but the wider tRNA labels
+  are single-submitter calls and noisier.
 - **Most benign variants are common.** ClinVar-benign mtDNA variants are mostly
   population polymorphisms, so the model could partly be scoring how familiar
   an allele looks. A rough check finds no clear sign of this: among benign
@@ -243,11 +272,12 @@ is in [`docs/findings.md`](docs/findings.md).
 
 v0.2, in progress. Done: data loaders, the Evo 2 adapter, the baseline, the
 three controls, the trust card and the command-line tool (v0.1, milestones
-M0–M7 in `CLAUDE.md`), plus the pre-declared gene-confound and
-threshold analyses. Not yet implemented: the synonymous-variant control, the
+M0–M7 in `CLAUDE.md`), plus the pre-declared gene-confound, threshold and
+within-gene analyses. Not yet implemented: the synonymous-variant control, the
 genetic-code check, a second model, and nuclear (ClinVar) variants. The most
-useful next step is a dataset with many more within-gene pathogenic–benign
-pairs.
+useful next step is a larger tRNA set with high-confidence benign labels, so
+the within-gene context question can be answered without leaning on
+single-submitter calls.
 
 ## Citations
 
