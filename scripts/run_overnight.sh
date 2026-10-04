@@ -19,7 +19,7 @@ step() {  # step <name> <command...>
     local name=$1; shift
     for attempt in 1 2; do
         echo "$(date -Is) START $name (attempt $attempt): $*" >> "$STATUS"
-        python "$@" > "logs/overnight_${name}.log" 2>&1
+        python "$@" > "logs/overnight_${name}_attempt${attempt}.log" 2>&1
         local code=$?
         echo "$(date -Is) END   $name exit=$code" >> "$STATUS"
         [ $code -eq 0 ] && return 0
