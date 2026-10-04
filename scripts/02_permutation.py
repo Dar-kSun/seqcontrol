@@ -112,7 +112,7 @@ def window_rotation_windows(data, variants, units) -> dict[int, list[tuple[str, 
 
 def score(args) -> tuple[dict[int, np.ndarray], list[tuple], np.ndarray, list[str], dict]:
     """Score every variant under every setting on the GPU; returns dL per setting."""
-    data = mtdna.load()
+    data = mtdna.load(labels=args.labels)
     trnas = [g for g in data.genes if g.biotype == "Mt_tRNA"]
     units = merge_overlapping([Interval(g.name, g.start - 1, g.end) for g in trnas])
     variants = [v for v in data.variants if any(u.start <= v.pos - 1 < u.end for u in units)]
@@ -162,12 +162,20 @@ def main() -> None:
         "--from-csv", action="store_true", help="recompute summaries from the saved CSV (no GPU)"
     )
     parser.add_argument("--window", type=int, default=WINDOW, help="window length in bp (odd)")
+    parser.add_argument(
+        "--labels",
+        choices=["strict", "expanded"],
+        default="strict",
+        help="benign at ClinVar 2+ stars (strict) or 1+ (expanded)",
+    )
     args = parser.parse_args()
     set_window(args.window)
     suffix = output_suffix(args.precision, WINDOW)
 
     out = config.ROOT / "results"
-    stem = f"permutation_{args.control}{suffix}"
+    stem = f"permutation_{args.control}{suffix}" + (
+        "_expanded" if args.labels == "expanded" else ""
+    )
     if args.from_csv:
         dl, keys, y, genes = read_scores(out / f"{stem}.csv")
         old = json.loads((out / f"{stem}.json").read_text())
@@ -184,7 +192,11 @@ def main() -> None:
     settings = [s for s in dl if s != 0]
 
     # Setting 0 must be exactly the M3 baseline.
-    baseline = f"baseline_{args.precision}" + (f"_w{WINDOW}" if WINDOW != 1025 else "")
+    baseline = (
+        f"baseline_{args.precision}"
+        + (f"_w{WINDOW}" if WINDOW != 1025 else "")
+        + ("_expanded" if args.labels == "expanded" else "")
+    )
     with open(out / f"{baseline}.csv", newline="") as f:
         base = {(int(r["pos"]), r["ref"], r["alt"]): float(r["delta"]) for r in csv.DictReader(f)}
     native_from_baseline = np.array([base[k] for k in keys])

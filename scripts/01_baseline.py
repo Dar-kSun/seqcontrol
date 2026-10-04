@@ -71,10 +71,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--precision", choices=PRECISIONS, default="fp8-delayed")
     parser.add_argument("--window", type=int, default=WINDOW, help="window length in bp (odd)")
+    parser.add_argument(
+        "--labels",
+        choices=["strict", "expanded"],
+        default="strict",
+        help="benign at ClinVar 2+ stars (strict) or 1+ (expanded)",
+    )
     args = parser.parse_args()
     window = args.window
 
-    data = mtdna.load()
+    data = mtdna.load(labels=args.labels)
     windows = [variant_windows(data.sequence, v, window, circular=True) for v in data.variants]
     unique = sorted({w for pair in windows for w in pair})
     print(f"{len(data.variants)} variants, {len(unique)} distinct {window} bp windows to score")
@@ -133,7 +139,11 @@ def main() -> None:
 
     out = config.ROOT / "results"
     out.mkdir(exist_ok=True)
-    stem = f"baseline_{args.precision}" + (f"_w{window}" if window != WINDOW else "")
+    stem = (
+        f"baseline_{args.precision}"
+        + (f"_w{window}" if window != WINDOW else "")
+        + ("_expanded" if args.labels == "expanded" else "")
+    )
     with open(out / f"{stem}.csv", "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]))
         writer.writeheader()

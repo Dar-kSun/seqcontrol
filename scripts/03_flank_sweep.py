@@ -68,7 +68,7 @@ def with_alt(seq: str, i: int, ref: str, alt: str) -> str:
 
 
 def score(args):
-    data = mtdna.load()
+    data = mtdna.load(labels=args.labels)
     trnas = [g for g in data.genes if g.biotype == "Mt_tRNA"]
     units = merge_overlapping([Interval(g.name, g.start - 1, g.end) for g in trnas])
     variants = [v for v in data.variants if any(u.start <= v.pos - 1 < u.end for u in units)]
@@ -120,6 +120,12 @@ def main() -> None:
         "--from-csv", action="store_true", help="recompute summaries from the saved CSV (no GPU)"
     )
     parser.add_argument("--window", type=int, default=WINDOW, help="window length in bp (odd)")
+    parser.add_argument(
+        "--labels",
+        choices=["strict", "expanded"],
+        default="strict",
+        help="benign at ClinVar 2+ stars (strict) or 1+ (expanded)",
+    )
     parser.add_argument("--radii", help="comma-separated radii in bp (default 0..400)")
     args = parser.parse_args()
     global RADII
@@ -128,7 +134,11 @@ def main() -> None:
         RADII = [int(r) for r in args.radii.split(",")]
     elif WINDOW != 1025:
         parser.error("--radii is required with a non-default --window")
-    stem = "flank_sweep" + output_suffix(args.precision, WINDOW)
+    stem = (
+        "flank_sweep"
+        + output_suffix(args.precision, WINDOW)
+        + ("_expanded" if args.labels == "expanded" else "")
+    )
     out = config.ROOT / "results"
     header = ["pos", "ref", "alt", "label", "gene", "radius", "seed", "delta"]
 
@@ -157,7 +167,11 @@ def main() -> None:
     y = np.array([labels[k] for k in keys])
     native = delta[(-1, -1)]
 
-    baseline = f"baseline_{args.precision}" + (f"_w{WINDOW}" if WINDOW != 1025 else "")
+    baseline = (
+        f"baseline_{args.precision}"
+        + (f"_w{WINDOW}" if WINDOW != 1025 else "")
+        + ("_expanded" if args.labels == "expanded" else "")
+    )
     with open(out / f"{baseline}.csv", newline="") as f:
         base = {(int(r["pos"]), r["ref"], r["alt"]): float(r["delta"]) for r in csv.DictReader(f)}
     if not np.array_equal(native, np.array([base[k] for k in keys])):

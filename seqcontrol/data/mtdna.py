@@ -62,11 +62,20 @@ def combine(
     return out, report
 
 
-def load(raw: Path = config.DATA_RAW) -> MtDataset:
-    """Fetch (once) and assemble the labelled mtDNA set."""
+LABEL_SETS = {"strict": 2, "expanded": 1}  # minimum ClinVar review stars for benign
+
+
+def load(raw: Path = config.DATA_RAW, labels: str = "strict") -> MtDataset:
+    """Fetch (once) and assemble the labelled mtDNA set.
+
+    labels="strict" (the headline set) takes ClinVar benign at 2+ stars; "expanded"
+    also takes 1 star, as a sensitivity analysis (docs/plan-v0.3-within-gene.md).
+    """
+    if labels not in LABEL_SETS:
+        raise ValueError(f"labels must be one of {list(LABEL_SETS)}")
     sequence = reference.chrm_sequence(raw)
     genes = reference.chrm_genes(raw)
     pathogenic = mitomap.pathogenic_variants(mitomap.fetch_disease_vcf(raw))
-    benign = clinvar.benign_mt_variants(clinvar.fetch_clinvar_vcf(raw))
+    benign = clinvar.benign_mt_variants(clinvar.fetch_clinvar_vcf(raw), LABEL_SETS[labels])
     variants, report = combine(sequence, pathogenic, benign)
     return MtDataset(sequence, genes, variants, report)

@@ -83,3 +83,12 @@ def test_parse_genes_sorts_and_names():
 @pytest.mark.parametrize("pos,ref", [(1, "G"), (16, "A"), (1000, "T")])
 def test_reference_fixture_matches_rcrs(pos, ref):
     assert read_fasta(FIXTURES / "chrM_1_1000.fa")[pos - 1] == ref
+
+
+def test_clinvar_one_star_adds_single_submitter_benign():
+    strict = keys(clinvar.benign_mt_variants(CLINVAR))
+    widened = keys(clinvar.benign_mt_variants(CLINVAR, min_stars=1))
+    assert strict < widened
+    assert widened - strict == {(235, "A", "G", 0)}  # single-submitter benign
+    with pytest.raises(ValueError):
+        clinvar.benign_mt_variants(CLINVAR, min_stars=0)
