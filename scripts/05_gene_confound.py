@@ -139,7 +139,7 @@ def main() -> None:
     )
 
     # --- B2: within-gene AUROC
-    pairs_by_gene = {g: int((y[genes == g] == 1).sum() * (y[genes == g] == 0).sum())
+    pairs_by_gene = {str(g): int((y[genes == g] == 1).sum() * (y[genes == g] == 0).sum())
                      for g in np.unique(genes)}  # fmt: skip
     n_pairs = sum(pairs_by_gene.values())
     within, draws_b2 = metrics.cluster_bootstrap(
@@ -152,7 +152,7 @@ def main() -> None:
     for g in np.unique(genes):
         keep = genes != g
         if 0 < y[keep].sum() < keep.sum():
-            logo[g] = metrics.auroc(y[keep], s[keep]) - native_auc.value
+            logo[str(g)] = metrics.auroc(y[keep], s[keep]) - native_auc.value
     most = max(logo, key=lambda g: abs(logo[g]))
     no_tl1 = genes != "MT-TL1"
     tl1_auc, _ = metrics.cluster_bootstrap(
