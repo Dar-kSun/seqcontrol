@@ -75,7 +75,7 @@
   "description": "protein-coding variants, strict labels",
   "model": "evo2_1b_base (fp8-delayed)",
   "bootstrap": "2000 cluster resamples over genes, redrawn until usable; seed 0",
-  "analysis_commit": "6d387e4",
+  "analysis_commit": "94f8809",
   "run_date": "2026-10-04",
   "versions": {
     "python": "3.13.14",

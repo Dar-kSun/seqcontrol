@@ -3,10 +3,41 @@
 The running results log. Each entry records the date, the model checkpoint, the
 command that produced the number, and the number with its confidence interval.
 
+## 2026-10-04: v0.3 Arm 1, within-gene discrimination on protein-coding variants
+
+Pre-declared in `docs/plan-v0.3-within-gene.md` (committed 96cb968 before
+running). **Model: Evo 2 `evo2_1b_base` (1B), shipped FP8 recipe. Strict
+labels; scores from the M3 baseline, no new scoring.** Reproduce:
+`python scripts/06_within_gene.py --arm 1`. Intervals: 2,000 cluster-bootstrap
+resamples over genes.
+
+241 protein-coding variants (48 pathogenic) in
+13 genes, all of which have both classes: **893
+within-gene pairs** (largest: MT-ND1 264, MT-ATP6 225, MT-ND5 138).
+
+| Score | AUROC |
+|---|---|
+| Model, whole set | 0.914 [0.853, 0.965] |
+| Gene prior, leave-one-variant-out (ignores the variant) | 0.542 [0.279, 0.629] |
+| Gene prior, in-sample (upper bound) | 0.697 [0.598, 0.759] |
+| **Model, within-gene pairs only** | **0.934 [0.847, 0.978]** |
+
+Dropping any one gene changes the within-gene AUROC by
+-0.012 to +0.018.
+
+**Pre-declared verdict: the model separates pathogenic from benign variants within the same protein-coding gene.** Here gene identity cannot explain the
+result: the gene prior is weak (at most 0.697
+even when it sees each variant's own label), and the model does as well within
+genes as across them. Whatever limits the tRNA analyses, on protein-coding
+variants `evo2_1b_base` is reading the variant.
+
+No context control was run on these variants (the genes are longer than the
+scoring window). Single scoring run.
+
 ## 2026-10-04: v0.2 analyses B and A (pre-declared)
 
 Both analyses follow `docs/plan-v0.2-threshold-and-gene.md`, committed before
-either was run (draft in 3f95725, amendments in c45386b; the amendments are
+either was run (draft in d685ed8, amendments in d76533a; the amendments are
 listed at the top of the plan). Decision rules are applied in code. No GPU:
 both work on the committed per-variant scores. **Model: Evo 2 `evo2_1b_base`
 (1B), shipped FP8 recipe, 67 tRNA variants (44 pathogenic, 23 benign) in 20
@@ -237,7 +268,7 @@ conclusions do not change:
 | Flank shuffle r = 400: Spearman | 0.93 | 0.94 |
 
 Provenance note: `results/flank_sweep.json` was scored by code at commit
-05b672a; the run read HEAD only when it finished and first stamped 91eb3c5.
+e25d6d0; the run read HEAD only when it finished and first stamped 774e095.
 The stamp was corrected by hand. The scoring code for default arguments is
 the same at both commits.
 

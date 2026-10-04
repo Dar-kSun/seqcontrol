@@ -53,7 +53,7 @@ mean log-likelihood per base:
 The model finds real mtDNA clearly more probable than shuffles of it, which sit
 near chance. Repeat runs at the same batch size give bit-identical scores.
 
-(Correction: an earlier version of this file, in commit 8989a84, said batched
+(Correction: an earlier version of this file, in commit 96ccdc1, said batched
 and one-at-a-time scoring agree to 6 decimal places. Both runs in that check
 actually used batch size 1, so it tested nothing about batching. The real
 comparison is below.)

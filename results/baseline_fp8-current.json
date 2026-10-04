@@ -136,7 +136,7 @@
     "clinvar_20260928.vcf.gz": "e0ac8e4d2d8f08d3faf845c5b5baa46b2051a8254cb0be4509a586fb15b81cb0",
     "mitomap_disease.vcf": "23fe09e3707a8438726c126a0d250965ff678e00ba725eeddd472d6ebc368ea2"
   },
-  "git_commit": "b1df6fb",
+  "git_commit": "568d02d",
   "run_date": "2026-10-03",
   "scoring_seconds": 138.2
 }

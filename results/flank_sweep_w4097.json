@@ -1,7 +1,7 @@
 {
   "control": "flank-shuffle (dinucleotide, Altschul-Erikson)",
   "model": "evo2_1b_base (fp8-delayed)",
-  "scored_at_commit": "91eb3c5",
+  "scored_at_commit": "774e095",
   "score_date": "2026-10-04",
   "scoring_seconds": 12330.2,
   "window_bp": 4097,
@@ -439,5 +439,5 @@
     }
   },
   "bootstrap": "2000 label-stratified resamples of variants; each statistic is the mean over seeds, recomputed per resample",
-  "analysis_commit": "91eb3c5"
+  "analysis_commit": "774e095"
 }
