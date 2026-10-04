@@ -161,3 +161,84 @@ def paired_bootstrap(
     values = [statistic(idx) for idx in stratified_resamples(y, n_boot, seed)]
     lo, hi = np.percentile(values, [2.5, 97.5])
     return Estimate(statistic(np.arange(len(y))), float(lo), float(hi), n_boot)
+
+
+def within_group_auroc(labels, scores, groups) -> float:
+    """AUROC over pathogenic-benign pairs from the same group only (ties count 1/2).
+
+    A stratified Mann-Whitney statistic: comparisons between groups never enter, so
+    a score that only tells groups apart gets 0.5. Undefined (ValueError) when no
+    group holds both classes.
+    """
+    y, s = _check(labels, scores)
+    g = np.asarray(groups)
+    wins, pairs = 0.0, 0
+    for name in np.unique(g):
+        m = g == name
+        pos, neg = s[m & (y == 1)], s[m & (y == 0)]
+        if len(pos) and len(neg):
+            diff = pos[:, None] - neg[None, :]
+            wins += float((diff > 0).sum() + 0.5 * (diff == 0).sum())
+            pairs += diff.size
+    if pairs == 0:
+        raise ValueError("no group contains both classes")
+    return wins / pairs
+
+
+def within_group_pairs(labels, groups) -> int:
+    y, g = np.asarray(labels, dtype=int), np.asarray(groups)
+    return int(sum((y[g == k] == 1).sum() * (y[g == k] == 0).sum() for k in np.unique(g)))
+
+
+@dataclass(frozen=True)
+class ClusterResample:
+    idx: np.ndarray  # variant indices; a cluster drawn twice contributes its variants twice
+    draws: int  # attempts needed before this resample was accepted
+    groups: np.ndarray  # cluster label per index; duplicated draws get distinct labels
+
+
+def cluster_resamples(
+    groups, accept: Callable[[np.ndarray, np.ndarray], bool], n_boot: int = 2000, seed: int = 0
+) -> Iterator[ClusterResample]:
+    """Resample whole clusters (genes) with replacement.
+
+    Draws the same number of clusters as the data has. A resample is redrawn until
+    `accept(idx, groups)` is true (e.g. both classes present); `draws` records how
+    many attempts that took. A cluster drawn twice gets two distinct labels, so
+    within-cluster statistics treat the copies as separate clusters.
+    """
+    g = np.asarray(groups)
+    names = np.unique(g)
+    members = {k: np.flatnonzero(g == k) for k in names}
+    rng = np.random.default_rng(seed)
+    for _ in range(n_boot):
+        draws = 0
+        while True:
+            draws += 1
+            picked = rng.choice(names, len(names))
+            idx = np.concatenate([members[k] for k in picked])
+            labels = np.concatenate([np.full(len(members[k]), i) for i, k in enumerate(picked)])
+            if accept(idx, labels):
+                break
+        yield ClusterResample(idx, draws, labels)
+
+
+def cluster_bootstrap(
+    statistic: Callable[[np.ndarray, np.ndarray], float],
+    groups,
+    accept: Callable[[np.ndarray, np.ndarray], bool],
+    n_boot: int = 2000,
+    seed: int = 0,
+) -> tuple[Estimate, float]:
+    """Estimate for `statistic(idx, resample_groups)` with a gene-level 95% interval.
+
+    Returns the estimate and the mean number of draws per accepted resample.
+    """
+    g = np.asarray(groups)
+    values, draws = [], []
+    for r in cluster_resamples(g, accept, n_boot, seed):
+        values.append(statistic(r.idx, r.groups))
+        draws.append(r.draws)
+    lo, hi = np.percentile(values, [2.5, 97.5])
+    point = statistic(np.arange(len(g)), g)
+    return Estimate(point, float(lo), float(hi), n_boot), float(np.mean(draws))

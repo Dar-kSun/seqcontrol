@@ -12,6 +12,7 @@ ENSEMBL_REST = "https://rest.ensembl.org"
 # MITOMAP serves its current tables with no version number, so each download is
 # pinned by date and checksum in data/MANIFEST.md instead.
 MITOMAP_DISEASE_VCF = "https://www.mitomap.org/cgi-bin/disease.cgi?format=vcf"
+MITOMAP_POLYMORPHISMS_VCF = "https://www.mitomap.org/cgi-bin/polymorphisms.cgi?format=vcf"
 
 CLINVAR_RELEASE = "20260928"
 CLINVAR_VCF_URLS = [  # a dated release moves to the archive folder after a few weeks

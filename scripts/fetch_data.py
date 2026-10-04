@@ -14,7 +14,7 @@ import datetime as dt
 from pathlib import Path
 
 from seqcontrol import config
-from seqcontrol.data import mtdna
+from seqcontrol.data import mitomap, mtdna
 from seqcontrol.data.cache import sha256
 
 MANIFEST = config.ROOT / "data" / "MANIFEST.md"
@@ -23,6 +23,11 @@ SOURCES = [
     ("chrM_GRCh38.fa", "Ensembl REST: GRCh38 chrM sequence (rCRS)", config.ENSEMBL_REST),
     ("chrM_GRCh38_genes.json", "Ensembl REST: chrM gene annotation", config.ENSEMBL_REST),
     ("mitomap_disease.vcf", "MITOMAP disease table (unversioned)", config.MITOMAP_DISEASE_VCF),
+    (
+        "mitomap_polymorphisms.vcf",
+        "MITOMAP polymorphism table (unversioned; allele frequencies)",
+        config.MITOMAP_POLYMORPHISMS_VCF,
+    ),
     (
         f"clinvar_{config.CLINVAR_RELEASE}.vcf.gz",
         f"ClinVar GRCh38 VCF, release {config.CLINVAR_RELEASE}",
@@ -46,6 +51,7 @@ def download_date(path: Path) -> str:
 
 def main() -> None:
     data = mtdna.load()
+    mitomap.fetch_polymorphisms_vcf()
     r = data.report
     counts = data.biotype_counts()
 
