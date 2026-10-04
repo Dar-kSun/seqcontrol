@@ -316,7 +316,8 @@ def figure(results: dict, a1: list[dict], out) -> None:
             linewidth=2,
             drawstyle="steps-post" if key != "auroc" else "default",
         )
-        ax.text(0.04, vals[-1], f" {label}", color=TEXT, fontsize=9, va="center", ha="left")
+        y_lab = max(vals[-1], 0.03)  # keep the label off the x-axis
+        ax.text(0.04, y_lab, f" {label}", color=TEXT, fontsize=9, va="center", ha="left")
     a3 = results["A3"]
     a_hat = results["A2"]["alpha_median_ratio"]["value"]
     ax.axvline(a_hat, color=MUTED, linestyle=(0, (4, 3)), linewidth=1.2)
@@ -334,10 +335,12 @@ def figure(results: dict, a1: list[dict], out) -> None:
         )
     ax.text(
         a_hat + 0.02,
-        obs["sensitivity"] - 0.06,
-        "open circles: observed tRNA swap",
+        obs["sensitivity"],
+        "observed tRNA swap (open circles)",
         color=TEXT_2,
         fontsize=8.5,
+        va="center",
+        ha="right",
     )
     ax.set_xlim(1.02, 0.0)
     ax.set_ylim(0, 1.08)
@@ -353,8 +356,7 @@ def figure(results: dict, a1: list[dict], out) -> None:
     for side in ("left", "bottom"):
         ax.spines[side].set_color(MUTED)
     ax.set_title(
-        f"Pure compression collapses sensitivity while AUROC stays flat · tRNA variants · "
-        f"{results['model']}",
+        "Lines: pure compression at a fixed cut-off  ·  Circles: the observed tRNA swap",
         color=TEXT,
         fontsize=10.5,
         loc="left",
@@ -362,12 +364,13 @@ def figure(results: dict, a1: list[dict], out) -> None:
     fig.text(
         0.01,
         0.01,
-        "Lines: native scores × α (AUROC identical by construction). "
+        f"{results['model']}, {results['n_pathogenic']} pathogenic / {results['n_benign']} benign "
+        "tRNA variants.\nLines: native scores × α (AUROC identical by construction). "
         "Reproduce: scripts/04_threshold_artefact.py.",
         color=TEXT_2,
         fontsize=8,
     )
-    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.tight_layout(rect=(0, 0.06, 1, 1))
     fig.savefig(out, dpi=160, facecolor=SURFACE)
     plt.close(fig)
 
