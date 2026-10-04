@@ -1,0 +1,163 @@
+{
+  "analysis": "A, threshold artefact (docs/plan-v0.2-threshold-and-gene.md)",
+  "model": "evo2_1b_base (fp8-delayed)",
+  "n_pathogenic": 44,
+  "n_benign": 23,
+  "n_shifts": 19,
+  "cut_offs_dL": {
+    "native_youden": -0.003000915050506592,
+    "paper": -0.0081
+  },
+  "A1_alpha_matching_observed_swap_sensitivity": 0.55,
+  "A1_observed_swap": {
+    "native_youden": {
+      "sensitivity": 0.5574162679425838,
+      "specificity": 0.8283752860411898
+    },
+    "paper": {
+      "sensitivity": 0.1590909090909091,
+      "specificity": 0.9977116704805491
+    }
+  },
+  "A2": {
+    "alpha_median_ratio": {
+      "value": 0.7716417667810056,
+      "ci95": [
+        0.5521122327585211,
+        0.9216685532787897
+      ],
+      "n_boot": 2000
+    },
+    "alpha_origin_fit": {
+      "value": 0.7443784058993096,
+      "ci95": [
+        0.5174912428927408,
+        0.8921373089588355
+      ],
+      "n_boot": 2000
+    },
+    "origin_fit_r2": {
+      "value": 0.4902573746194362,
+      "ci95": [
+        0.14886622669893004,
+        0.7079634639659773
+      ],
+      "n_boot": 2000
+    },
+    "class_median_ratio_descriptive": {
+      "pathogenic": 0.6449741027174409,
+      "benign": 0.8902395769516009
+    },
+    "spearman_native_vs_swap_mean_over_shifts": 0.558155605311467
+  },
+  "A3": {
+    "cut_off_dL": -0.003000915050506592,
+    "native": {
+      "sensitivity": 0.8181818181818182,
+      "specificity": 0.8260869565217391,
+      "auroc": 0.8241106719367589
+    },
+    "observed_swap": {
+      "sensitivity": 0.5574162679425838,
+      "specificity": 0.8283752860411898,
+      "auroc": 0.7503120449344705
+    },
+    "auroc_drop_variant_bootstrap": {
+      "value": 0.07379862700228845,
+      "ci95": [
+        -0.030020022883295232,
+        0.16190581443727894
+      ],
+      "n_boot": 2000
+    },
+    "nulls": {
+      "median_ratio": {
+        "alpha": 0.7716417667810056,
+        "sensitivity": 0.6363636363636364,
+        "specificity": 0.8695652173913043,
+        "auroc": 0.8241106719367589,
+        "share_of_sensitivity_drop_explained": {
+          "value": 0.6972477064220186,
+          "ci95": [
+            0.22609126984126973,
+            1.147278444825614
+          ],
+          "n_boot": 2000,
+          "resamples_skipped_no_drop": 0
+        },
+        "verdict": "indeterminate at this sample size"
+      },
+      "origin_fit": {
+        "alpha": 0.7443784058993096,
+        "sensitivity": 0.6363636363636364,
+        "specificity": 0.8695652173913043,
+        "auroc": 0.8241106719367589,
+        "share_of_sensitivity_drop_explained": {
+          "value": 0.6972477064220186,
+          "ci95": [
+            0.16032071056270636,
+            1.4861375835250286
+          ],
+          "n_boot": 2000,
+          "resamples_skipped_no_drop": 0
+        },
+        "verdict": "indeterminate at this sample size"
+      }
+    },
+    "verdict": "indeterminate at this sample size"
+  },
+  "A4": {
+    "native_youden": {
+      "surrogate_sensitivity": 0.5921052631578948,
+      "surrogate_specificity": 0.8947368421052632,
+      "observed_sensitivity": 0.5574162679425838,
+      "observed_specificity": 0.8283752860411898
+    },
+    "paper": {
+      "surrogate_sensitivity": 0.16028708133971292,
+      "surrogate_specificity": 1.0,
+      "observed_sensitivity": 0.1590909090909091,
+      "observed_specificity": 0.9977116704805491
+    }
+  },
+  "A5_simulation": {
+    "label": "SIMULATION of the mechanism at the paper's reported operating point, using synthetic Gaussian scores; not the paper's data, not a reproduction",
+    "inputs": {
+      "cut_off_dL": -0.0081,
+      "native_sensitivity": 0.658,
+      "native_specificity": 0.785,
+      "target_sensitivity": 0.051,
+      "paper_reported_specificity_after": 0.938
+    },
+    "by_scale": {
+      "sd_p x0.5": {
+        "sd_pathogenic": 0.0027479445331737417,
+        "alpha_for_5.1pct_sensitivity": 0.5907245014015491,
+        "specificity_at_that_alpha": 0.999604494140089,
+        "sensitivity_check": 0.051000000000000045,
+        "auroc_before_and_after": 0.7909906718940882
+      },
+      "sd_p x1.0": {
+        "sd_pathogenic": 0.005495889066347483,
+        "alpha_for_5.1pct_sensitivity": 0.4191689289915527,
+        "specificity_at_that_alpha": 0.999604494140089,
+        "sensitivity_check": 0.051000000000000045,
+        "auroc_before_and_after": 0.7909906718940881
+      },
+      "sd_p x2.0": {
+        "sd_pathogenic": 0.010991778132694967,
+        "alpha_for_5.1pct_sensitivity": 0.2651573192600241,
+        "specificity_at_that_alpha": 0.999604494140089,
+        "sensitivity_check": 0.051000000000000045,
+        "auroc_before_and_after": 0.7909906718940881
+      }
+    }
+  },
+  "bootstrap": "2000 label-stratified resamples of variants; seed 0",
+  "analysis_commit": "db56760",
+  "run_date": "2026-10-04",
+  "versions": {
+    "python": "3.13.14",
+    "numpy": "2.5.3"
+  }
+}
